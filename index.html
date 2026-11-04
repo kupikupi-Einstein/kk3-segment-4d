@@ -1,0 +1,1168 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>4D BIM Simulation</title>
+<meta name="theme-color" content="#0b1f33">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1220;--panel:rgba(12,18,30,.74);--panel2:rgba(20,28,44,.85);--line:rgba(255,255,255,.09);--txt:#e9eef5;--mut:#93a1b5;--acc:#f0b429;--acc2:#22b8cf;--wip:#ff8a3d;--ok:#51cf66;--bad:#ff6b6b}
+body[data-ui="light"]{--panel:rgba(255,255,255,.82);--panel2:rgba(245,247,250,.92);--line:rgba(10,20,40,.10);--txt:#13202f;--mut:#55657a;--acc:#c47f00;--acc2:#0b7285}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:'IBM Plex Sans Thai',system-ui,sans-serif;font-size:13px}
+#c{position:fixed;inset:0;display:block}
+.glass{background:var(--panel);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+button{font:inherit;font-size:12px;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:5px 8px;cursor:pointer;white-space:nowrap}
+button:hover{border-color:var(--acc)} button.on{background:var(--acc);color:#111;border-color:var(--acc)}
+select,input[type=range]{accent-color:var(--acc)}
+select{font:inherit;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:5px}
+#top{position:fixed;left:12px;right:12px;top:12px;display:flex;align-items:center;gap:12px;padding:7px 12px;z-index:5;height:56px}
+#brand{display:flex;flex-direction:column;min-width:0;flex:1}
+#brand b{font-size:15px;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#brand span{color:var(--mut);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbtns{margin-left:auto;display:flex;gap:5px;flex-wrap:nowrap;justify-content:flex-end;align-items:center}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent}
+.seg button.on{background:var(--acc);color:#111}
+#left{position:fixed;left:12px;top:78px;bottom:126px;width:390px;display:flex;flex-direction:column;z-index:4}
+#tabs{display:flex;gap:4px;padding:8px 36px 0 8px}
+#tabs button{flex:1;font-size:12px;padding:6px 4px}
+#tabbody{flex:1;overflow:auto;padding:10px 12px 12px}
+#right{position:fixed;right:12px;top:78px;width:300px;max-height:calc(100% - 200px);overflow:auto;padding:12px;z-index:4}
+#bottom{position:fixed;left:12px;right:12px;bottom:12px;padding:10px 14px;z-index:5;display:flex;flex-direction:column;gap:6px}
+#tlrow{display:flex;align-items:center;gap:10px}
+#tlwrap{position:relative;flex:1;height:22px}
+#tlwrap input{position:absolute;inset:0;width:100%;margin:0}
+#ticks{position:relative;height:30px;font-size:10.5px;color:var(--mut)}
+#ticks div{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+#ticks div.ms{color:var(--acc);top:15px!important}
+#dateBig{font-size:26px;font-weight:600;line-height:1.1}
+.mut{color:var(--mut)} .acc{color:var(--acc)}
+h3{margin:12px 0 6px;font-size:13px;color:var(--acc);text-transform:uppercase;letter-spacing:.6px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px}
+.kpi b{display:block;font-size:18px}
+.kpi span{font-size:11px;color:var(--mut)}
+.bar{height:6px;background:rgba(127,127,127,.25);border-radius:4px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc2),var(--acc))}
+#act{list-style:none;padding:0;margin:0}
+#act li{padding:6px 8px;border-left:3px solid var(--wip);background:var(--panel2);border-radius:6px;margin-bottom:5px;font-size:12px}
+#act li small{display:block;color:var(--mut)}
+.grow{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:6px;font-size:11.5px;padding:2px 0;cursor:pointer}
+.grow:hover .gl{color:var(--acc)}
+.gl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt{position:relative;height:12px;background:rgba(127,127,127,.12);border-radius:3px}
+.gb{position:absolute;top:2px;height:8px;border-radius:3px;background:var(--acc2)}
+.gb.as{background:repeating-linear-gradient(45deg,#7c8aa0 0 4px,#5c6a80 4px 8px)}
+.gb .pg{position:absolute;left:0;top:0;bottom:0;background:var(--acc);border-radius:3px}
+#gnow{position:absolute;top:0;bottom:0;width:2px;background:var(--bad);pointer-events:none}
+.ms-step{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:8px 10px;margin-bottom:8px;cursor:pointer}
+.ms-step.cur{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.ms-step b{display:block}
+.ms-step .d{font-size:11px;color:var(--acc2)}
+.ms-step ul{margin:5px 0 0;padding-left:16px;color:var(--mut);font-size:11.5px}
+.cat{display:flex;align-items:center;gap:8px;padding:4px 0}
+.cat i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.cat label{flex:1;cursor:pointer}
+table.cyc{width:100%;border-collapse:collapse;font-size:11.5px}
+table.cyc td{border-bottom:1px solid var(--line);padding:3px 4px}
+#props{position:fixed;right:324px;top:78px;width:300px;padding:12px;z-index:6;display:none}
+#props table{width:100%;font-size:12px;border-collapse:collapse}
+#props td{padding:3px 2px;border-bottom:1px solid var(--line);vertical-align:top}
+#props td:first-child{color:var(--mut);width:42%}
+#hud{position:fixed;inset:0;pointer-events:none;z-index:3;display:none;font-family:ui-monospace,Consolas,monospace;color:#e9fff4;text-shadow:0 0 4px #000}
+#hud .lb{position:absolute;left:0;right:0;height:9vh;background:#000}
+#hud .tl{position:absolute;left:3%;top:12vh;font-size:13px;line-height:1.6}
+#hud .tr{position:absolute;right:3%;top:12vh;font-size:13px;line-height:1.6;text-align:right}
+#hud .bl{position:absolute;left:3%;bottom:12vh;font-size:13px}
+#hud .cross{position:absolute;left:50%;top:50%;width:140px;height:90px;transform:translate(-50%,-50%);border:1px solid rgba(255,255,255,.5);border-radius:4px}
+#hud .cross:before,#hud .cross:after{content:"";position:absolute;background:rgba(255,255,255,.7)}
+#hud .cross:before{left:50%;top:30%;bottom:30%;width:1px}
+#hud .cross:after{top:50%;left:40%;right:40%;height:1px}
+#hud .rec{color:#ff4d4d}
+#caption{position:fixed;left:50%;bottom:14vh;transform:translateX(-50%);z-index:6;font-size:22px;font-weight:600;padding:10px 22px;display:none;text-align:center;max-width:86vw}
+#caption small{display:block;font-size:13px;font-weight:400;color:var(--mut)}
+#loading{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;background:#0b1220;color:#e9eef5;transition:opacity .6s}
+#loading .sp{width:44px;height:44px;border:3px solid rgba(255,255,255,.15);border-top-color:#f0b429;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+#flyhelp{position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:6;padding:6px 14px;display:none;font-size:12px}
+body.noui #top,body.noui #left,body.noui #right,body.noui #bottom,body.noui #props{display:none!important}
+body.hideL #left{display:none!important} body.hideR #right{display:none!important}
+.pclose{position:absolute;top:6px;right:6px;z-index:2;padding:1px 7px;font-size:11px;line-height:1.4;border-radius:7px;opacity:.75}
+.pclose:hover{opacity:1}
+#modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(620px,calc(100% - 32px));max-height:calc(100% - 60px);overflow:auto;z-index:30;padding:18px;display:none}
+#modalBack{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:29;display:none}
+#drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;cursor:pointer;margin:10px 0;color:var(--mut)}
+#drop.over{border-color:var(--acc);color:var(--txt)}
+#impStatus{font-size:12px;line-height:1.55;margin:8px 0;white-space:pre-wrap}
+#impStatus .ok{color:var(--ok)} #impStatus .bad{color:var(--bad)}
+.mrow{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px}
+#schedSrc{font-size:11px;color:var(--mut);margin-top:2px}
+.pill{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;border:1px solid var(--line)}
+.pill.wip{background:var(--wip);color:#111}.pill.done{background:var(--ok);color:#111}.pill.plan{background:#7c8aa0;color:#111}
+#mobileToggle{display:none}
+@media (max-width:1250px){#brand span{display:none} #topbtns .lbl{display:none}}
+@media (max-width:900px){#top{height:auto;flex-wrap:wrap} #left{width:auto;right:12px;top:auto;bottom:112px;height:45vh;display:none} #left.show{display:flex} #right{display:none} #mobileToggle{display:inline-block} #props{right:12px;left:12px;width:auto}}
+</style>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="loading"><div class="sp"></div><div id="loadTxt">4D BIM …</div></div>
+<div id="top" class="glass">
+  <div id="brand"><b id="ttl"></b><span id="sub"></span></div>
+  <div id="topbtns">
+    <button id="mobileToggle" data-i="panels"></button>
+    <div class="seg" id="langSeg" title="ภาษา / Language"><button data-l="th">TH</button><button data-l="en">EN</button></div>
+    <div class="seg" id="themes"><button data-t="day">☀ Day</button><button data-t="sunset">🌇 Sunset</button><button data-t="night">🌙 Night</button><button data-t="bim">▦ BIM 4D</button><button data-t="blue">⌗ Blueprint</button></div>
+    <select id="view"></select>
+    <button id="btnTour" data-i="tour"></button>
+    <button id="btnFly" data-i="fly"></button>
+    <button id="btnSound" data-i="sound"></button>
+    <button id="btnMusic" data-i="music"></button>
+    <button id="btnShot" data-it="shot">📷</button>
+    <button id="btnGlb" data-it="glb">⬇ GLB</button>
+    <button id="btnImport" data-i="import" data-it="importT"></button>
+    <button id="btnLbl" class="on" data-i="labels" data-it="labelsT"></button>
+    <button id="btnL" class="on" data-it="panelL">◧</button>
+    <button id="btnR" class="on" data-it="panelR">◨</button>
+    <button id="btnUI" data-it="hideUI">⤢</button>
+  </div>
+</div>
+<div id="left" class="glass">
+  <button class="pclose" id="closeL">✕</button>
+  <div id="tabs"><button data-tab="gantt" data-i="tabGantt"></button><button data-tab="ms" data-i="tabMS"></button><button data-tab="model" data-i="tabModel"></button><button data-tab="src" data-i="tabSrc"></button></div>
+  <div id="tabbody"></div>
+</div>
+<div id="right" class="glass">
+  <button class="pclose" id="closeR">✕</button>
+  <div class="mut" data-i="simDate"></div>
+  <div id="dateBig">—</div>
+  <div id="stepName" class="acc" style="margin-top:4px;font-weight:600"></div>
+  <div id="schedSrc"></div>
+  <div class="kpis" id="kpis"></div>
+  <h3 data-i="scurve"></h3>
+  <canvas id="scurve" width="276" height="90" style="width:100%;height:90px"></canvas>
+  <h3 data-i="activities"></h3>
+  <ul id="act"></ul>
+</div>
+<div id="props" class="glass"></div>
+<div id="modalBack"></div>
+<div id="modal" class="glass">
+  <div style="display:flex;justify-content:space-between;align-items:center"><b class="acc" style="font-size:15px" data-i="impTitle"></b><button id="mClose">✕</button></div>
+  <div class="mut" style="font-size:12px;margin-top:6px" data-i="impHelp"></div>
+  <div id="drop" data-i="impDrop"></div>
+  <input type="file" id="impFile" accept=".pdf,.xml,.csv,.json,.mpp,.txt" style="display:none">
+  <div id="impStatus"></div>
+  <div class="mrow"><button id="mReset" data-i="impReset"></button><button id="mExport" data-i="impExport"></button><button id="mApply" class="on" disabled data-i="impApply"></button></div>
+</div>
+<div id="bottom" class="glass">
+  <div id="tlrow">
+    <button id="btnPlay"></button>
+    <select id="speed"><option value="0.1"></option><option value="0.5" selected></option><option value="2"></option><option value="7"></option><option value="15"></option><option value="30"></option></select>
+    <div id="tlwrap"><input type="range" id="slider" min="0" max="1000" value="0"></div>
+    <b id="dateSmall" style="min-width:132px;text-align:right"></b>
+  </div>
+  <div id="ticks"></div>
+</div>
+<div id="hud"><div class="lb" style="top:0"></div><div class="lb" style="bottom:0"></div><div class="tl" id="hudL"></div><div class="tr" id="hudR"></div><div class="bl" id="hudB"></div><div class="cross"></div></div>
+<div id="caption" class="glass"></div>
+<div id="flyhelp" class="glass" data-i="flyHelp"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { Sky } from 'three/addons/objects/Sky.js';
+import { Water } from 'three/addons/objects/Water.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* =====================================================================================
+   ENGINE CORE – language, dates, helpers (project-agnostic)
+   ===================================================================================== */
+const QS = new URLSearchParams(location.search);
+let LANG = 'th';
+const DAY = 86400000;
+const D = s => new Date(s + 'T00:00:00').getTime();
+const lerp = (a, b, t) => a + (b - a) * t, clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const fmtISO = t => { const d = new Date(t); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const iso = t => fmtISO(t), addD = (d, n) => iso(D(d) + n * DAY);
+const L2 = (th, en) => LANG === 'en' ? (en ?? th) : th;
+const tx = v => v == null ? '' : typeof v === 'string' ? v : Array.isArray(v) ? L2(v[0], v[1]) : L2(v.th, v.en);   // [th,en] | {th,en} | string
+const fmtDate = t => new Date(t).toLocaleDateString(LANG === 'en' ? 'en-GB' : 'th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+
+/* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+   PROJECT BLOCK – Kiak Kai Contract 3 · precast segment erection with an overhead launching gantry.
+   Source: METHOD STATEMENT for Erection Precast segment (Submit) for Kiak kai.pdf (60 sheets, ITD).
+   Coordinates: metres, x = erection direction (ML33 at x = 0, ML32 at 32.5 …), y = up (ground = 0),
+   z = right of the axis looking from ML33 towards ML27.
+   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> */
+const KK = { segN: 0, segs: [], spans: [], ph: [], cur: null };    // filled by buildProject, read by KPIs / updateProject
+const PROJECT = {
+  id: 'kk3-segment-lg',
+  title: ['เกียกกาย สัญญา 3 · จำลอง 3D การติดตั้ง Precast Segment ด้วย Launching Gantry', 'Kiak Kai Contract 3 · 3D simulation of precast segment erection by launching gantry'],
+  subtitle: ['ทางยกระดับฝั่งพระนคร · Span-by-span · Overhead gantry 96 m · Winch 120 t · ตาม Method Statement ที่ยื่นขออนุมัติ', 'Phra Nakhon elevated road · span-by-span · overhead gantry 96 m · 120 t winch · per the submitted method statement'],
+  short: 'KK-C3 Segment Erection',
+  T0: '2026-11-28', T1: '2027-01-31', initialDate: '2026-12-12', openDate: '2027-12-31',
+  geo: { lat: 13.792, lon: 100.512 },
+  context: {
+    groundY: 0,
+    water: null,
+    city: { count: 240, radius: [70, 900], exclude: [[-160, -40, 380, 130]] },
+    trees: 220,
+    traffic: { roads: [{ x0: -400, z0: -13, x1: 650, z1: -13, lanes: 2 }, { x0: -400, z0: 13, x1: 650, z1: 13, lanes: 2 }], count: 44 },
+  },
+  center: [80, 12, 0],
+  categories: {
+    pier: { t: ['ตอม่อ ML (ก่อสร้างแล้ว)', 'Piers ML (existing)'], grp: 'Substructure', c: '#a5b4c4' },
+    pseg: { t: ['Pier / End segment', 'Pier / end segments'], grp: 'Superstructure', c: '#74c0fc' },
+    seg: { t: ['Typical segment', 'Typical segments'], grp: 'Superstructure', c: '#d0ebff' },
+    joint: { t: ['Closure joint (หล่อในที่)', 'Closure joints (cast in situ)'], grp: 'Superstructure', c: '#b2f2bb' },
+    tendon: { t: ['External tendon', 'External tendons'], grp: 'Superstructure', c: '#ffd8a8' },
+    lg: { t: ['Launching gantry', 'Launching gantry'], grp: 'Temporary Works', c: '#ff8787' },
+    crane: { t: ['รถเครน (First span)', 'Mobile crane (first span)'], grp: 'Temporary Works', c: '#ffd43b' },
+    truck: { t: ['รถขนส่งชิ้นส่วน', 'Segment trailer'], grp: 'Temporary Works', c: '#ffe066' },
+  },
+  // No programme was supplied: every date below is an ASSUMPTION (≈ 7 days per span) and can be replaced by uploading a programme.
+  schedule: {
+    sourceName: ['แผนงานสมมติ (ยังไม่ได้รับแผนงานจริง)', 'Assumed programme (no programme supplied)'],
+    dateOrder: 'dmy',
+    dates: {
+      'FS-CRANE': ['2026-12-01', '2026-12-03'], 'LG-ASM': ['2026-12-03', '2026-12-09'], 'LOADTEST': ['2026-12-09', '2026-12-11'],
+      'S1': ['2026-12-11', '2026-12-16'], 'S2': ['2026-12-16', '2026-12-23'], 'S3': ['2026-12-23', '2026-12-30'],
+      'S4': ['2027-01-04', '2027-01-11'], 'S5': ['2027-01-11', '2027-01-18'], 'S6': ['2027-01-18', '2027-01-25'],
+    },
+    sections: [],
+    rules: [
+      { re: /(?:span|ช่วง)?\s*ML\s*(\d+)\s*(?:[-–—]|to|ถึง)\s*ML\s*(\d+)/i, key: m => 'S' + (34 - Math.max(+m[1], +m[2])) },
+      { re: /load\s*test|ทดสอบการรับน้ำหนัก/i, key: () => 'LOADTEST' },
+      { re: /(launching\s*(gantry|truss)).*(assembl|erect|install|ติดตั้ง)|(assembl|erect|install|ติดตั้ง).*(launching\s*(gantry|truss))/i, key: () => 'LG-ASM' },
+      { re: /(pier|end)\s*segment.*crane|crane.*(pier|end)\s*segment/i, key: () => 'FS-CRANE' },
+    ],
+  },
+  views: {
+    overview: { t: ['มุมมอง: ภาพรวม', 'View: overview'], pos: [-48, 46, 66], target: [45, 14, 0] },
+    gantry: { t: ['Launching gantry (ใกล้)', 'Launching gantry (close)'], pos: [-8, 32, -48], target: [36, 15, 0] },
+    side: { t: ['ด้านข้าง (Elevation)', 'Side elevation'], pos: [62, 17, 105], target: [62, 14, 0] },
+    street: { t: ['ระดับถนน ใต้สะพาน', 'Street level, under the deck'], pos: [8, 2.2, -16], target: [40, 14, 0] },
+    front: { t: ['หัว Gantry (Front leg)', 'Gantry nose (front leg)'], pos: [118, 26, 22], target: [70, 15, 0] },
+    top: { t: ['มุมบน (Plan)', 'Top (plan)'], pos: [100, 300, 1], target: [100, 0, 0] },
+  },
+  tour: [
+    { pos: [-150, 80, 150], target: [80, 12, 0], t: ['เกียกกาย สัญญา 3', 'Kiak Kai Contract 3'], s: ['ทางยกระดับฝั่งพระนคร · Precast segmental box girder', 'Phra Nakhon elevated road · precast segmental box girder'] },
+    { pos: [-40, 30, 45], target: [20, 14, 0], t: ['First span ML33–ML32', 'First span ML33–ML32'], s: ['Pier / End segment ติดตั้งด้วยรถเครน', 'Pier and end segments set by mobile crane'] },
+    { pos: [10, 26, -30], target: [45, 18, 0], t: ['Launching gantry 96 m', 'Launching gantry 96 m'], s: ['Overhead type · 96.0 × 1.80 × 4.18 m · 9 ชิ้น', 'Overhead type · 96.0 × 1.80 × 4.18 m · 9 pieces'] },
+    { pos: [45, 4, -12], target: [50, 14, 0], t: ['ใต้สะพาน', 'Under the deck'], s: ['ส่งชิ้นส่วนจากด้านล่าง · Winch 120 t', 'Segments delivered below · 120 t winch'] },
+    { pos: [95, 30, 26], target: [70, 17, 0], t: ['Front leg + Pier side bracket', 'Front leg + pier side bracket'], s: ['ค้ำ FL บน Pier side bracket ก่อนยก Pier segment', 'FL on the pier side bracket before the pier segment'] },
+    { pos: [150, 45, -40], target: [110, 14, 0], t: ['Continuous span', 'Continuous span'], s: ['ช่วงละ 32.5 m · External tendon', '32.5 m spans · external tendons'] },
+    { pos: [260, 60, 70], target: [150, 12, 0], t: ['ML27 →', 'ML27 →'], s: ['Unit ถัดไป', 'Next unit'] },
+    { pos: [140, 120, 160], target: [90, 12, 0], t: ['KK-C3 Segment Erection', 'KK-C3 segment erection'], s: ['Method Statement Simulation', 'Method statement simulation'] },
+  ],
+  steps: [],            // generated in buildProject from the erection sequence (one step per stage)
+  stepJump: .02,        // jump 30 min into a step when clicked
+  cycle: { t: ['รอบงาน 1 ช่วง (สมมติ ≈ 7 วัน)', 'One span cycle (assumed ≈ 7 days)'], rows: [['Release + launch + brackets', 1.6, 'SEQ 1–4'], ['Pier segment + move legs', 1.25, 'SEQ 5–8'], ['Hang 12 segments', 1.6, 'SEQ 9'], ['Closure joints + cure', 1.9, 'SEQ 9'], ['Stress external tendons', .6, 'SEQ 9']] },
+  kpis: [
+    { t: ['ชิ้นส่วนที่ติดตั้งแล้ว', 'Segments erected'], v: t => { const n = KK.segs.filter(e => t >= e.finish).length; return `${n} / ${KK.segN}`; }, bar: t => KK.segs.filter(e => t >= e.finish).length / Math.max(1, KK.segN) },
+    { t: ['ช่วงที่ดึงลวดแล้ว', 'Spans stressed'], v: t => `${KK.spans.filter(s => t >= s.done).length} / ${KK.spans.length}`, bar: t => KK.spans.filter(s => t >= s.done).length / Math.max(1, KK.spans.length) },
+    { t: ['ขั้นตอนปัจจุบัน', 'Current stage'], v: () => KK.cur ? KK.cur.code : '—' },
+    { t: ['รอบงานต่อช่วง (สมมติ)', 'Cycle per span (assumed)'], v: () => L2('≈ 7 วัน', '≈ 7 days') },
+  ],
+  hse: ['<h3>ความปลอดภัย (MS ข้อ 7.0)</h3><ul class="mut" style="padding-left:16px;font-size:11.5px"><li>ตรวจอุปกรณ์ยก จุดยก สลิง ก่อนยกทุกครั้ง · Winch ไม่เกิน 120 t · Span ไม่เกิน 700 t</li><li>งานบนที่สูง: เข็มขัดนิรภัย · หยุดงานเมื่อฝนตกหนัก/ฟ้าผ่า</li><li>งานกลางคืน: ไฟส่องสว่าง ไฟเตือน ป้าย รั้ว (ข้อ 5.1.4)</li><li>Profile grade ≤ 5% · Cross fall ≤ 3%</li><li>การจราจร: แผนเบี่ยงจราจรต้องได้รับอนุมัติก่อนทำงาน (ข้อ 9.0)</li></ul>',
+    '<h3>HSE (MS section 7.0)</h3><ul class="mut" style="padding-left:16px;font-size:11.5px"><li>Inspect lifting gear, lifting points and slings before every lift · winch ≤ 120 t · span ≤ 700 t</li><li>Work at height: harness · stop work in heavy rain / lightning</li><li>Night work: lighting, warning lights, signs, fencing (5.1.4)</li><li>Profile grade ≤ 5% · cross fall ≤ 3%</li><li>Traffic: diversion plan approved before work (9.0)</li></ul>'],
+  info: ['<h3>แหล่งข้อมูล</h3><ul class="mut" style="padding-left:16px;font-size:11.5px"><li>METHOD STATEMENT for Erection Precast segment (Submit) for Kiak kai — 60 แผ่น (ITD)</li><li>ข้อ 4.1: Gantry 96.0 × 1.80 × 4.18 m แบ่ง 9 ชิ้น · Winch 120 t · Span ≤ 35.1 m · ≤ 700 t</li><li>เอกสารแนบ 2 (แผ่น 21–33): Main truss 6 + 7×12 + 6 m, FML 30 t, RML 33 t, RL 18.5 t, FL 8.3 t, Pier bracket 18 t, Pier side bracket 8.5 t, Winch trolley 27 t, 10T service crane 6.8 t, Hanging frame 3.3 t</li><li>เอกสารแนบ 3 (แผ่น 34–49): Continuous span SEQ 1–29</li><li>เอกสารแนบ 4 (แผ่น 50–58): First span ML32–ML33 SEQ 1–16 · ช่วง 32.500 m</li><li>เอกสารแนบ 5 (แผ่น 60): General drawing JP700-40</li></ul><h3>สมมติฐาน (ต้องตรวจกับแบบ)</h3><ul class="mut" style="padding-left:16px;font-size:11.5px"><li><b>วันที่ทั้งหมดสมมติ</b> (≈ 7 วัน/ช่วง) — อัปโหลดแผนงานเพื่อแทนที่</li><li>แนวทางตรงและราบ, ทุกช่วง 32.5 m (ML33 → ML27)</li><li>หน้าตัด Box: กว้าง 10.0 m ลึก 2.2 m · Typical segment 12 ชิ้น × 2.45 m · Pier segment 2.5 m · Closure joint 0.3 m</li><li>Unit ต่อเนื่อง 3 ช่วง: ML33–ML30 และ ML30–ML27 · Expansion ที่ ML33, ML30, ML27 (MS SEQ 28 เขียน PN+5–PN+6 น่าจะเป็น PN+4–PN+5)</li><li>ตอม่อสูงถึงท้องคาน ≈ 11.8 m · ส่งชิ้นส่วนจากด้านล่างด้วยรถพ่วง ลำดับแขวนจากหน้าไปหลัง</li><li>Pier bracket ติดตั้งก่อน Pier segment ทุกตอม่อ (MS ระบุเฉพาะ SEQ 23)</li></ul><p class="mut" style="font-size:11px">แกน x = ทิศทางการติดตั้ง (ML33 → ML27), z บวก = ด้านขวาเมื่อมองจาก ML33 ไป ML27</p>',
+    '<h3>Data sources</h3><ul class="mut" style="padding-left:16px;font-size:11.5px"><li>METHOD STATEMENT for Erection Precast segment (Submit) for Kiak kai — 60 sheets (ITD)</li><li>4.1: gantry 96.0 × 1.80 × 4.18 m in 9 pieces · 120 t winch · span ≤ 35.1 m · ≤ 700 t</li><li>Attachment 2 (sheets 21–33): main truss 6 + 7×12 + 6 m, FML 30 t, RML 33 t, RL 18.5 t, FL 8.3 t, pier bracket 18 t, pier side bracket 8.5 t, winch trolley 27 t, 10 t service crane 6.8 t, hanging frame 3.3 t</li><li>Attachment 3 (sheets 34–49): continuous span SEQ 1–29</li><li>Attachment 4 (sheets 50–58): first span ML32–ML33 SEQ 1–16 · spans 32.500 m</li><li>Attachment 5 (sheet 60): general drawing JP700-40</li></ul><h3>Assumptions (to check against drawings)</h3><ul class="mut" style="padding-left:16px;font-size:11.5px"><li><b>All dates are assumed</b> (≈ 7 days/span) — upload a programme to replace them</li><li>Straight, level alignment; all spans 32.5 m (ML33 → ML27)</li><li>Box section 10.0 m wide, 2.2 m deep · 12 typical segments × 2.45 m · pier segment 2.5 m · closure joints 0.3 m</li><li>3-span continuous units ML33–ML30 and ML30–ML27 · expansion at ML33, ML30, ML27 (MS SEQ 28 says PN+5–PN+6, read as PN+4–PN+5)</li><li>Pier height to soffit ≈ 11.8 m · segments delivered below on trailers, hung front to rear</li><li>Pier bracket set before every pier segment (the MS mentions it only in SEQ 23)</li></ul><p class="mut" style="font-size:11px">x = erection direction (ML33 → ML27), +z = right looking from ML33 to ML27</p>'],
+  labelGroups: [['grid', ['ตอม่อ ML', 'Pier numbers']], ['temp', ['อุปกรณ์ Gantry', 'Gantry parts']]],
+  structuralCats: ['seg', 'pseg', 'joint', 'tendon'],
+  archAfterStructure: false,
+};
+
+function buildProject(api) {
+  const { THREE, M, mesh, member, addEl, date, label, D, DAY, lerp, clamp } = api;
+  const SPAN = 32.5, PX = n => (33 - n) * SPAN;                     // pier ML n → x
+  const YT = 14.0, DEP = 2.2, YS = YT - DEP, YP = YS - .2;           // deck top, soffit, pier top (bearing 0.2 m)
+  const YB = YT + 4.0, TH = 4.18, YTT = YB + TH;                     // truss bottom / top chord
+  const LT = 2.45, LP = 2.5, LE = 1.2, CJ = .3;                     // typical / pier / end segment, closure joint
+  const steelR = new THREE.MeshStandardMaterial({ color: 0xc92a2a, metalness: .45, roughness: .5 });
+  const steelY = new THREE.MeshStandardMaterial({ color: 0xf2b705, metalness: .35, roughness: .55 });
+  const steelD = new THREE.MeshStandardMaterial({ color: 0x343a40, metalness: .6, roughness: .45 });
+  const barMat = new THREE.MeshStandardMaterial({ color: 0x9fa6ad, metalness: .9, roughness: .25 });
+  const ply = new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: .9 });
+  const box = (w, h, d, mat, x = 0, y = 0, z = 0) => { const m = mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); return m; };
+  const bake = (meshes) => api.mergeGeometries(meshes.map(m => { m.updateMatrix(); return m.geometry.clone().applyMatrix4(m.matrix); }));
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+  /* ---------- deck section (u = lateral, v = from deck top) ---------- */
+  const OUT = [[-5, 0], [5, 0], [5, -.25], [3.0, -.55], [2.5, -DEP], [-2.5, -DEP], [-3.0, -.55], [-5, -.25]];
+  const HOLE = [[-2.55, -.3], [-2.15, -DEP + .25], [2.15, -DEP + .25], [2.55, -.3]];
+  const gCache = {};
+  const segGeo = (L, solid) => gCache[L + '' + solid] || (gCache[L + '' + solid] = (() => {
+    const sh = new THREE.Shape(OUT.map(([u, v]) => new THREE.Vector2(u, v))); if (!solid) sh.holes.push(new THREE.Path(HOLE.map(([u, v]) => new THREE.Vector2(u, v))));
+    const g = new THREE.ExtrudeGeometry(sh, { depth: L, bevelEnabled: false }); g.translate(0, 0, -L / 2); g.rotateY(Math.PI / 2);
+    const uv = g.attributes.uv; for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / 6, uv.getY(i) / 6); return g; })());
+  const segObj = (L, solid, x) => { const o = new THREE.Group(), m = mesh(segGeo(L, solid), M.conc); o.add(m);
+    // parapets cast with the segment
+    [-4.85, 4.85].forEach(z => o.add(box(L - .02, .9, .3, M.barrier, 0, .45, z))); o.position.set(x, YT, 0); return o; };
+
+  /* ---------- piers ML33 … ML24 (existing before erection) ---------- */
+  const t0 = D(PROJECT.T0);
+  for (let n = 33; n >= 24; n--) {
+    const x = PX(n), o = new THREE.Group();
+    const col = mesh(api.taper(YP - 3.4, 2.2, 2.8, 2.2, 2.8), M.conc); o.add(col);
+    const head = mesh(api.taper(3.4, 2.2, 2.8, 3.0, 6.2), M.conc); head.position.y = YP - 3.4; o.add(head);
+    const cap = box(6.5, 1.8, 6.5, M.concDark, 0, -.95, 0); o.add(cap);
+    [-1.9, 1.9].forEach(z => o.add(box(.8, .2, .8, steelD, 0, YP + .1, z)));
+    o.position.set(x, 0, 0);
+    addEl({ id: 'ML' + n, name: `Pier ML${n}`, cat: 'pier', grp: L2('ตอม่อ ML24–ML33', 'Piers ML24–ML33'), obj: o, start: t0, finish: t0 + DAY / 2, kind: 'gen', dwg: 'MS Att.4 / Att.5', src: L2('ก่อสร้างแล้ว (สมมติ)', 'Existing (assumed)'), qty: { H: YP } });
+    label('ML' + n, V(x, 1.6, 5.2), '#22b8cf', 'ml' + n, 'grid', .55);
+  }
+
+  /* ---------- span layout ---------- */
+  const EXP = [33, 30, 27];
+  const SP = [1, 2, 3, 4, 5, 6].map(k => { const rear = 34 - k, front = 33 - k; return { k, rear, front, xr: PX(rear), xf: PX(front), rearExp: EXP.includes(rear), frontExp: EXP.includes(front), key: 'S' + k, lbl: `ML${rear}–ML${front}` }; });
+  // span type per MS: S1 first span (Att.4), S2 follows Att.4 SEQ 5–16, then Att.3 continuous: first/second/last of a unit
+  SP.forEach(s => s.type = s.k === 1 ? 'first' : s.k === 2 ? 'att4' : s.frontExp ? 'last' : s.rearExp ? 'cfirst' : 'csecond');
+  const segAll = [];
+  SP.forEach(s => {
+    s.segs = [];   // hang order: front → rear
+    if (s.frontExp) s.segs.push({ id: `ES-ML${s.front}a`, x: s.xf - .05 - LE / 2, L: LE, solid: true, kind: 'end', px: s.xf - .05 - LE / 2 - 2.5 });
+    if (s.rearExp && s.k > 1) s.segs.push({ id: `ES-ML${s.rear}b`, x: s.xr + .05 + LE / 2, L: LE, solid: true, kind: 'end', px: s.xr + .05 + LE / 2 + 2.5 });
+    for (let i = 12; i >= 1; i--) s.segs.push({ id: `S${s.k}-T${String(i).padStart(2, '0')}`, x: s.xr + LP / 2 + CJ + (i - .5) * LT, L: LT, solid: false, kind: 'typ', i });
+    s.joints = [s.xr + LP / 2 + CJ / 2, s.xf - LP / 2 - CJ / 2];
+    s.pier = s.frontExp ? null : { id: `PS-ML${s.front}`, x: s.xf, L: LP, solid: true, kind: 'pier' };
+  });
+
+  /* ---------- phase timeline ---------- */
+  const PH = []; KK.ph = PH;
+  const T = { prep: [.3, .4, .3, .15, .55, .3, .35, .5], lift: .12, joint: .4, cast: .2, cure: 1.3, stress: .6, fin: .3 };
+  const tx2 = (a, s) => a.replace(/\{D\}/g, 'ML' + s.rear).replace(/\{E\}/g, 'ML' + s.front).replace(/\{C\}/g, 'ML' + (s.rear + 1));
+  const CODES = {
+    cfirst: ['SEQ 1', 'SEQ 2', 'SEQ 3', 'SEQ 4', 'SEQ 5', 'SEQ 6', 'SEQ 7', 'SEQ 8', 'SEQ 9'],
+    csecond: ['SEQ 10', 'SEQ 11', 'SEQ 12', 'SEQ 12', 'SEQ 13', 'SEQ 14', 'SEQ 15', 'SEQ 16–17', 'SEQ 18'],
+    last: ['SEQ 19', 'SEQ 20', 'SEQ 21', 'SEQ 22', 'SEQ 23', 'SEQ 24', 'SEQ 25', 'SEQ 26–27', 'SEQ 28'],
+    att4: ['Att.4 SEQ 4', 'Att.4 SEQ 5–8', 'Att.4 SEQ 9', 'Att.4 SEQ 10', 'Att.4 SEQ 11', 'Att.4 SEQ 12', 'Att.4 SEQ 13–14', 'Att.4 SEQ 15–16', 'SEQ 9 (Att.3)'],
+  };
+  const TXT = {
+    rel: ['ปลด PT BAR ที่แขวนชิ้นส่วน · ถอด Temporary PT bar และ Hanging frame ของช่วง {C}–{D}', 'Release hanger PT bars · remove temporary PT bars and hanging frames of span {C}–{D}'],
+    launch: ['เลื่อน Winch trolley ไปท้าย Gantry · เลื่อน Launching gantry ไปยังเสา {E} · ค้ำ Front leg (FL) บนเสา {E}', 'Winch trolley to the rear · launch the gantry to pier {E} · front leg (FL) on pier {E}'],
+    launchA4: ['ปรับ Main truss ลาด 1.5% · ติดตั้ง Rear leg (RL) บน End segment ML33 · เลื่อน Gantry ไปยัง ML31 · ค้ำ FL บน ML31', 'Main truss to 1.5 % · rear leg (RL) on end segment ML33 · launch the gantry to ML31 · FL on ML31'],
+    psb: ['ติดตั้ง Pier side bracket ที่ {E} ด้วย 10T service crane', 'Install the pier side bracket at {E} with the 10 t service crane'],
+    fl: ['เลื่อน Launching gantry · ค้ำ Front leg (FL) บน Pier side bracket', 'Shift the gantry · front leg (FL) onto the pier side bracket'],
+    ps: ['ติดตั้ง Pier bracket และ Pier segment {E} ด้วย Winch trolley', 'Set the pier bracket and pier segment {E} with the winch trolley'],
+    pb: ['ติดตั้ง Pier bracket ที่ {E} ด้วย Winch trolley (ตอม่อ Expansion)', 'Set the pier bracket at {E} with the winch trolley (expansion pier)'],
+    rml: ['ยึด Rear leg (RL) กับชิ้นส่วนที่ติดตั้งแล้ว · ย้าย Rear middle leg (RML) ไปชิด Front middle leg (FML)', 'Fix the rear leg (RL) on the erected deck · move RML next to FML'],
+    rmlA4: ['Activate RL · ย้าย RML ชิด FML · ล็อค RML กับ Main truss · ปรับลาด Main truss 3.5%', 'Activate RL · move RML next to FML · lock RML to the main truss · main truss to 3.5 %'],
+    fml: ['Activate RML · ย้าย FML ไปวางบน Pier segment {E} · ถอด Pier bracket ด้วย Winch trolley', 'Activate RML · move FML onto pier segment {E} · remove the pier bracket with the winch trolley'],
+    fmlPB: ['Activate RML · ย้าย FML ไปวางบน Pier bracket {E}', 'Activate RML · move FML onto the pier bracket at {E}'],
+    fmlA4: ['ย้าย FML ไปวางบน Pier segment ML31 · Winch ไปหน้า · หด FL · ปรับลาด 1.5% · ปลด Pier side bracket', 'FML onto pier segment ML31 · winch to the front · retract FL · back to 1.5 % · release the pier side bracket'],
+    move: ['เคลื่อน Gantry เข้าตำแหน่งติดตั้ง {D}–{E} · ถอด Pier side bracket · RL ชิด RML · ย้าย RML วางบน Pier segment {D} · Retract RL', 'Move the gantry to the erection position {D}–{E} · remove the pier side bracket · RL to RML · RML onto pier segment {D} · retract RL'],
+    moveA4: ['เลื่อน Launching gantry ไปด้านหน้า 15 m · Activate RL · ย้าย RML วางบน Pier segment ML32 · เตรียมยกชิ้นงาน ML32–ML31', 'Launch the gantry 15 m forward · activate RL · RML onto pier segment ML32 · ready to erect ML32–ML31'],
+    hang: ['ติดตั้งชิ้นส่วนระหว่าง {D} และ {E} — แขวนด้วย Hanging frame + PT bar', 'Erect the segments between {D} and {E} — hung on hanging frames + PT bars'],
+    joint: ['ปรับแนว/ระดับ · ติดตั้งแบบ Closure joint และกระเช้าสำหรับดึงลวด', 'Align and level · closure-joint formwork and stressing platforms'],
+    cast: ['เทคอนกรีต Closure joint', 'Cast the closure joints'],
+    cure: ['บ่มคอนกรีต รอผลทดสอบกำลังอัดลูกปูน', 'Cure — wait for the cube results'],
+    stress: ['ดึงลวด External tendon ตามแบบที่ได้รับอนุมัติ', 'Stress the external tendons per the approved drawings'],
+    fin: ['ปลด PT bar และ Hanging frame ทั้งหมด · จบการติดตั้งแบบ Continuous span', 'Release all PT bars and hanging frames · continuous span complete'],
+  };
+  const add = (a, dur, s, code, txt, fn, extra = {}) => { const p = { a, b: a + dur * DAY, s, code, th: tx2(txt[0], s), en: tx2(txt[1], s), fn, ...extra }; PH.push(p); return p.b; };
+
+  // ---- state helpers (S is rebuilt every frame by replaying the phases) ----
+  const ease = u => u * u * (3 - 2 * u);
+  const FH = s => s.xf + 17;                       // truss front when erecting span s (FML at s.xf, FL suspended)
+  const ACT = { FLon: YB - YP, FLbr: YB - 11.48, FLoff: 2.2, RL: YB - YT, RLoff: 1.8 };
+  // low-bed trailer: drives in along the work zone beside the piers (z = -3.5), slides under the pick point, leaves after the hook takes the load
+  const truckPose = (u, px, seg, uLoad) => { if (u >= .42) return null; const d = ((px % SPAN) + SPAN) % SPAN, dir = d < SPAN / 2 ? 1 : -1;
+    let x = px, z = 0; if (u < .07) { x = lerp(px - dir * 50, px, ease(u / .07)); z = -3.5; } else if (u < .12) z = lerp(-3.5, 0, ease((u - .07) / .05)); else if (u >= .35) { x = lerp(px, px + dir * 60, ease((u - .35) / .07)); z = -3.5; } else if (u >= .3) z = lerp(0, -3.5, ease((u - .3) / .05));
+    return { x, z, dir, load: u < uLoad ? seg : null }; };
+  const liftFn = (seg, pickX, noHF) => (S, u) => {       // winch trolley lifts one segment from the trailer below
+    const xs = seg.x, px = pickX ?? xs, yTop0 = 1.6 + DEP + .02, yHi = YT + .45;
+    S.truck = truckPose(u, px, seg, .22);
+    let sx = px, sy = yTop0;
+    if (u < .14) { S.trol = lerp(S.trol, px, ease(u / .14)); S.hook = lerp(YTT - 1, yTop0 + .5, ease(u / .14)); }
+    else if (u < .22) { S.trol = px; S.hook = yTop0 + .5; }
+    else if (u < .62) { const k = ease((u - .22) / .4); S.trol = px; sy = lerp(yTop0, yHi, k); S.hook = sy + .5; }
+    else if (u < .8) { const k = ease((u - .62) / .18); sx = lerp(px, xs, k); S.trol = sx; sy = yHi; S.hook = sy + .5; }
+    else if (u < .9) { const k = ease((u - .8) / .1); sx = xs; S.trol = xs; sy = lerp(yHi, YT, k); S.hook = sy + .5; }
+    else { sx = xs; sy = YT; S.trol = xs; S.hook = lerp(YT + .5, YTT - 1, ease((u - .9) / .1)); if (!noHF) S.hf[seg.id] = seg.x; }
+    if (u < .9) { S.carry = { id: seg.id, x: sx, y: sy }; }
+    if (u >= .22 && u < .9) S.spread = { x: sx, y: sy + .3 };
+  };
+  const relHF = (S, u, s) => { const ids = Object.keys(S.hf); ids.forEach((id, i) => { if (u > (i + 1) / (ids.length + 1)) delete S.hf[id]; }); if (u > .9) S.plat = []; };
+
+  // ---- first span (Att.4 SEQ 1–4) ----
+  const s1 = SP[0];
+  { const [a, b] = date('FS-CRANE').map(D), h = (b - a) / 2 / DAY;
+    const craneLift = (seg, fromX) => (S, u) => { const yT0 = 1.6 + DEP + .02, k1 = ease(clamp(u / .45, 0, 1)), k2 = ease(clamp((u - .45) / .35, 0, 1)), k3 = ease(clamp((u - .8) / .2, 0, 1));
+      S.truck = truckPose(u, fromX, seg, .2);
+      if (u >= .2 && u < 1) { const x = lerp(fromX, seg.x, k2), y = u < .45 ? lerp(yT0, YT + 1.2, k1) : u < .8 ? YT + 1.2 : lerp(YT + 1.2, YT, k3); S.carry = { id: seg.id, x, y }; S.craneHook = { x, y: y + .3, z: 0 }; }
+      else S.craneHook = { x: seg.x, y: YT + 6, z: 0 };
+      if (u >= 1) S.placed[seg.id] = 1; };
+    const ps32 = s1.pier, es33 = { id: 'ES-ML33b', x: s1.xr + .05 + LE / 2, L: LE, solid: true, kind: 'end' };
+    s1.cranePS = ps32; s1.craneES = es33;
+    add(a, h, s1, 'Att.4 SEQ 1', ['ติดตั้ง Pier segment ML32 ด้วยรถเครน · ยึด PT bar กับหัวเสา', 'Set pier segment ML32 with the mobile crane · fix PT bars to the pier head'], craneLift(ps32, s1.xf - 8), { seg: ps32, stage: 'crane' });
+    add(a + h * DAY, h, s1, 'Att.4 SEQ 1', ['ติดตั้ง End segment ML33 ด้วยรถเครน · ยึด PT bar กับหัวเสา', 'Set end segment ML33 with the mobile crane · fix PT bars to the pier head'], craneLift(es33, s1.xr + 8), { seg: es33, stage: 'crane' });
+  }
+  { const [a, b] = date('LG-ASM').map(D), d = (b - a) / DAY;
+    add(a, d, s1, 'Att.4 SEQ 2', ['ติดตั้ง Launching gantry (Main truss 9 ชิ้น, FML/RML, Winch trolley, 10T crane) · ปรับระดับ FML/RML ให้ Main truss อยู่ในแนวราบ · ต่อ FL ด้วยท่อน 2 m', 'Assemble the launching gantry (9 truss pieces, FML/RML, winch trolley, 10 t crane) · level the truss on FML/RML · front leg with a 2 m extension'],
+      (S, u) => { S.asm = u; S.F = FH(s1); S.fml = s1.xf; S.rml = s1.xr + .6; S.trol = S.F - 50; const k = clamp(u / .7, 0, 1), piece = Math.min(8, Math.floor(k * 9)), pc = PIECES[piece];
+        S.craneHook = u < .7 ? { x: S.F + (pc[0] + pc[1]) / 2, y: YTT + 2 + (1 - ((k * 9) % 1)) * 4, z: 0 } : { x: S.F - 50, y: YTT + 3, z: 0 }; }, { stage: 'asm' });
+  }
+  { const [a, b] = date('LOADTEST').map(D), d = (b - a) / DAY;
+    add(a, d, s1, 'Att.4 SEQ 3', ['ทดสอบการรับน้ำหนัก Full scale load testing (แขวนน้ำหนักทดสอบตลอดช่วง)', 'Full-scale load test (test weights hung along the span)'], (S, u) => { S.blocks = u < .85 ? Math.min(1, u / .4) : 1 - (u - .85) / .15; }, { stage: 'load' });
+  }
+
+  // ---- generic span cycle ----
+  const PIECES = [[-96, -90]]; for (let i = 0; i < 7; i++) PIECES.push([-90 + i * 12, -78 + i * 12]); PIECES.push([-6, 0]);
+  const hangAndClose = (s, a, k, codeHang) => {
+    let t = a; const n = s.segs.length;
+    s.segs.forEach((seg, i) => { seg.t0 = t; t = add(t, T.lift * k, s, codeHang, [tx2(TXT.hang[0], s) + ` · ${seg.id} (${i + 1}/${n})`, tx2(TXT.hang[1], s) + ` · ${seg.id} (${i + 1}/${n})`], liftFn(seg, seg.px), { seg, stage: 'hang' }); seg.t1 = t; });
+    s.jointA = t; t = add(t, T.joint * k, s, codeHang, TXT.joint, (S, u) => { S.plat = s.joints.slice(); S.trol = lerp(S.trol, S.F - 45, u); }, { stage: 'joint' });
+    s.cast = t; t = add(t, T.cast * k, s, codeHang, TXT.cast, () => { }, { stage: 'cast' });
+    t = add(t, T.cure * k, s, codeHang, TXT.cure, () => { }, { stage: 'cure' }); s.jointB = t;
+    s.stressA = t; t = add(t, T.stress * k, s, codeHang, TXT.stress, () => { }, { stage: 'stress' }); s.done = t;
+    return t;
+  };
+  // S1 hang (Att.4 SEQ 4)
+  { const [a, b] = date('S1').map(D), sum = s1.segs.length * T.lift + T.joint + T.cast + T.cure + T.stress, k = (b - a) / DAY / sum;
+    hangAndClose(s1, a, k, 'Att.4 SEQ 4'); }
+  // S2 … S6: release previous → launch → brackets → pier segment → move legs → hang → close → stress
+  SP.slice(1).forEach((s, idx) => {
+    const prev = SP[idx], [a, b] = date(s.key).map(D), C = CODES[s.type], A4 = s.type === 'att4', last = s.k === SP.length;
+    const sum = T.prep.reduce((p, q) => p + q, 0) + s.segs.length * T.lift + T.joint + T.cast + T.cure + T.stress + (last ? T.fin : 0), k = (b - a) / DAY / sum;
+    let t = a; const P = T.prep.map(d => d * k), E = s.xf, Dx = s.xr;
+    s.prepA = t;
+    t = add(t, P[0], s, C[0], TXT.rel, (S, u) => relHF(S, u, prev), { stage: 'prep' });
+    t = add(t, P[1], s, C[1], A4 ? TXT.launchA4 : TXT.launch, (S, u) => {
+      if (A4) { S.rlVis = true; if (u < .25) { S.rl = s1.xr + .6; S.rlLen = lerp(ACT.RLoff, ACT.RL, ease(u / .25)); } else if (u < .35) S.rlLen = lerp(ACT.RL, ACT.RLoff, ease((u - .25) / .1)); }
+      const k1 = ease(clamp((u - (A4 ? .35 : .1)) / (A4 ? .5 : .7), 0, 1)), F0 = S.F;
+      S.trol = lerp(S.trol, S.F - 82, ease(clamp(u / .2, 0, 1)));
+      S.F = lerp(F0, E + 1.3, k1); S.trol += S.F - F0; S.sc += S.F - F0; if (S.rlVis && !A4) S.rl += S.F - F0; else if (A4 && u >= .35) S.rl += S.F - F0;
+      S.flLen = u < .85 ? ACT.FLoff : lerp(ACT.FLoff, ACT.FLon, ease((u - .85) / .15)); S.flMove = u < .85; }, { stage: 'prep' });
+    t = add(t, P[2], s, C[2], TXT.psb, (S, u) => { S.scX = E + 2.25; const y = u < .7 ? lerp(.6, 10.3, ease(u / .7)) : 10.3; S.psbMove = { x: E, y }; S.scHook = y + 1.3; if (u >= 1) { S.psb[E] = 1; S.psbMove = null; } }, { stage: 'prep' });
+    t = add(t, P[3], s, C[3], TXT.fl, (S, u) => { const F0 = S.F; S.flLen = u < .3 ? lerp(ACT.FLon, ACT.FLoff, u / .3) : u < .7 ? ACT.FLoff : lerp(ACT.FLoff, ACT.FLbr, (u - .7) / .3); if (u >= .3) { S.F = lerp(F0, E + 3.0, ease(clamp((u - .3) / .4, 0, 1))); S.trol += S.F - F0; S.sc += S.F - F0; if (!A4 && S.rlVis) S.rl += S.F - F0; } }, { stage: 'prep' });
+    t = add(t, P[4], s, C[4], s.pier ? TXT.ps : TXT.pb, (S, u) => {
+      const pbU = s.pier ? clamp(u / .35, 0, 1) : u;            // pier bracket first, then the pier segment
+      if (pbU < 1) { const y = lerp(.8, 11.0, ease(pbU)); S.pbMove = { x: E, y }; S.trol = lerp(S.trol, E, ease(clamp(pbU * 3, 0, 1))); S.hook = y + 1.2; } else { S.pb[E] = 1; S.pbMove = null; }
+      if (s.pier && u > .35) liftFn(s.pier, E - 6.5, true)(S, (u - .35) / .65);
+      if (u >= 1 && s.pier) S.placed[s.pier.id] = 1; }, { stage: 'prep', seg: s.pier });
+    t = add(t, P[5], s, C[5], A4 ? TXT.rmlA4 : TXT.rml, (S, u) => {
+      S.rlVis = true; if (u < .3) { const r0 = S.rl; S.rl = lerp(r0, prev.xr + 4, ease(u / .3)); S.rlLen = lerp(S.rlLen ?? ACT.RLoff, ACT.RL, ease(u / .3)); } else S.rlLen = ACT.RL;
+      if (u >= .3) { S.rmlLift = u < .9; S.rml = lerp(S.rml, Dx - 4.5, ease(clamp((u - .35) / .5, 0, 1))); } }, { stage: 'prep' });
+    t = add(t, P[6], s, C[6], A4 ? TXT.fmlA4 : s.pier ? TXT.fml : TXT.fmlPB, (S, u) => {
+      S.rmlLift = false; S.fmlLift = u > .1 && u < .7; S.fml = lerp(S.fml, s.pier ? E : E + .8, ease(clamp((u - .15) / .5, 0, 1)));
+      S.fmlY = s.pier ? (u > .15 ? YT : S.fmlY) : lerp(YT, 11.6, ease(clamp((u - .5) / .2, 0, 1)));
+      if (u > .7 && S.pb[Dx]) { const k2 = (u - .7) / .3; S.pbMove = { x: Dx, y: lerp(11.0, .8, ease(k2)) }; S.trol = Dx; S.hook = S.pbMove.y + 1.2; delete S.pb[Dx]; if (u >= 1) S.pbMove = null; }}, { stage: 'prep' });
+    t = add(t, P[7], s, C[7], A4 ? TXT.moveA4 : TXT.move, (S, u) => {
+      const F0 = S.F; S.flLen = u < .15 ? lerp(ACT.FLbr, ACT.FLoff, u / .15) : ACT.FLoff;
+      if (u < .2) S.rlLen = lerp(ACT.RL, ACT.RLoff, u / .2);
+      if (u >= .15 && u < .55) { S.F = lerp(F0, FH(s), ease((u - .15) / .4)); S.trol += S.F - F0; S.sc += S.F - F0; S.rl += S.F - F0; }
+      if (u >= .55) S.F = FH(s);
+      if (u >= .3 && S.psb[E]) { S.scX = E + 2.25; const k2 = clamp((u - .3) / .3, 0, 1); S.psbMove = { x: E, y: lerp(10.3, .6, ease(k2)) }; S.scHook = S.psbMove.y + 1.3; delete S.psb[E]; if (k2 >= 1) S.psbMove = null; }
+      if (u >= .55) { const k3 = (u - .55) / .45; S.rl = lerp(S.rl, Dx - 7, ease(clamp(k3 / .3, 0, 1))); S.rlLen = k3 < .3 ? ACT.RLoff : k3 < .45 ? lerp(ACT.RLoff, ACT.RL, (k3 - .3) / .15) : k3 < .85 ? ACT.RL : lerp(ACT.RL, ACT.RLoff, (k3 - .85) / .15);
+        S.rmlLift = k3 > .45 && k3 < .8; S.rml = lerp(S.rml, Dx - .6, ease(clamp((k3 - .45) / .3, 0, 1))); if (k3 >= .85) S.rmlLift = false; } }, { stage: 'prep' });
+    s.prepB = t;
+    t = hangAndClose(s, t, k, C[8]);
+    if (last) t = add(t, T.fin * k, s, 'SEQ 29', TXT.fin, (S, u) => relHF(S, u, s), { stage: 'fin' });
+  });
+  PH.sort((p, q) => p.a - q.a);
+  KK.spans = SP;
+
+  /* ---------- permanent elements: segments, closure joints, tendons ---------- */
+  const SRC = L2('MS Att.3/Att.4 · วันที่สมมติ', 'MS Att.3/Att.4 · assumed dates');
+  const addSeg = (seg, s, a, b, how) => { const o = segObj(seg.L, seg.solid, seg.x);
+    if (seg.solid) { const dia = box(seg.L * .6, DEP - .5, 4.6, M.conc, 0, -DEP / 2, 0); o.add(dia); }
+    const e = addEl({ id: seg.id, name: `${seg.kind === 'pier' ? 'Pier segment' : seg.kind === 'end' ? 'End segment' : 'Typical segment'} ${seg.id} (L = ${seg.L.toFixed(2)} m)`, cat: seg.kind === 'typ' ? 'seg' : 'pseg', grp: L2('ช่วง ', 'Span ') + s.lbl, obj: o, start: a, finish: b, kind: 'gen', dwg: 'MS Att.3–5', src: SRC + (how ? ' · ' + how : ''), qty: { L: seg.L, vol: +(seg.L * (seg.solid ? 13.5 : 6.4)).toFixed(1), W: +(seg.L * (seg.solid ? 13.5 : 6.4) * 2.5).toFixed(0) + ' t' }, loc: `x = ${seg.x.toFixed(2)} m` });
+    e.segRef = seg; segAll.push(e); return e; };
+  const p1 = PH.find(p => p.seg === s1.cranePS), p2 = PH.find(p => p.seg === s1.craneES);
+  addSeg(s1.cranePS, s1, p1.a + .2 * (p1.b - p1.a), p1.b, L2('รถเครน', 'mobile crane'));
+  addSeg(s1.craneES, s1, p2.a + .2 * (p2.b - p2.a), p2.b, L2('รถเครน', 'mobile crane'));
+  SP.forEach(s => {
+    s.segs.forEach(seg => addSeg(seg, s, seg.t0 + .22 * (seg.t1 - seg.t0), seg.t1, 'winch trolley'));
+    if (s.k > 1 && s.pier) { const p = PH.find(q => q.seg === s.pier); addSeg(s.pier, s, p.a + (.35 + .22 * .65) * (p.b - p.a), p.b, 'winch trolley'); }
+    s.joints.forEach((x, j) => { const o = segObj(CJ, false, x); addEl({ id: `CJ-${s.lbl}-${j + 1}`, name: `Closure joint ${j + 1} · ${s.lbl}`, cat: 'joint', grp: L2('ช่วง ', 'Span ') + s.lbl, obj: o, kind: 'cast', start: s.jointA, cast: s.cast, finish: s.jointB, dwg: 'MS 5.3.9', src: SRC, qty: { L: CJ, vol: +(CJ * 6.4).toFixed(2) } }); });
+    // external tendons: 2 per web, draped between pier diaphragms and deviators at third points
+    const o = new THREE.Group(), x0 = s.xr + .3, x1 = s.xf - .3, d1 = lerp(x0, x1, 1 / 3), d2 = lerp(x0, x1, 2 / 3);
+    [-1.75, -1.45, 1.45, 1.75].forEach(z => { const pts = [V(x0, YT - .6, z), V(d1, YT - DEP + .45, z), V(d2, YT - DEP + .45, z), V(x1, YT - .6, z)]; for (let i = 0; i < 3; i++) o.add(member(pts[i], pts[i + 1], .14, M.cable)); });
+    addEl({ id: `TDN-${s.lbl}`, name: `External tendons · ${s.lbl}`, cat: 'tendon', grp: L2('ช่วง ', 'Span ') + s.lbl, obj: o, kind: 'cable', start: s.stressA, finish: s.done, dwg: 'MS 5.3.9', src: SRC, noShadow: true });
+  });
+  KK.segs = segAll; KK.segN = segAll.length;
+  const segEl = {}; segAll.forEach(e => segEl[e.id] = e);
+
+  /* ---------- launching gantry (one temporary element; parts animated in updateProject) ---------- */
+  const lg = new THREE.Group(), G = {};
+  // main truss: two planes 1.8 m apart, 3 m panels, 9 pieces (6 + 7×12 + 6 m) – Att.2 sheets 21–23
+  G.truss = new THREE.Group(); G.pieces = [];
+  PIECES.forEach(([x0, x1]) => { const ms = [], ch = .42, br = .2;
+    [-.9, .9].forEach(z => { ms.push(box(x1 - x0, ch, ch, steelR, (x0 + x1) / 2, ch / 2, z), box(x1 - x0, ch, ch, steelR, (x0 + x1) / 2, TH - ch / 2, z));
+      for (let x = x0; x < x1 - .01; x += 3) { const pi = Math.round((x + 96) / 3); ms.push(member(V(x, ch, z), V(x, TH - ch, z), br, steelR));
+        ms.push(pi % 2 ? member(V(x, ch, z), V(x + 3, TH - ch, z), br, steelR) : member(V(x, TH - ch, z), V(x + 3, ch, z), br, steelR)); } });
+    for (let x = x0; x < x1 - .01; x += 3) { ms.push(box(.2, .2, 1.8, steelR, x, TH - .1, 0), box(.2, .2, 1.8, steelR, x, .1, 0)); }
+    [-.55, .55].forEach(z => ms.push(box(x1 - x0, .18, .18, steelD, (x0 + x1) / 2, TH + .09, z)));
+    const m = mesh(bake(ms), steelR); G.truss.add(m); G.pieces.push(m); });
+  lg.add(G.truss);
+  // legs: FL (front), FML, RML (sledges on lower cross beams), RL (rear) – Att.2 sheets 24–27
+  const legPost = (mat, w = .7) => { const g = new THREE.BoxGeometry(w, 1, w); g.translate(0, -.5, 0); return mesh(g, mat); };
+  const mkTele = (wz, mat) => { const o = new THREE.Group(); o.add(box(1.0, .8, wz + 1.2, mat, 0, -.4, 0)); const posts = [-wz / 2, wz / 2].map(z => { const p = legPost(mat); p.position.set(0, -.8, z); o.add(p); return p; });
+    const foot = box(1.4, .35, wz + 1.6, steelD, 0, 0, 0); o.add(foot); o.userData = { posts, foot }; return o; };
+  const setTele = (o, len) => { o.userData.posts.forEach(p => p.scale.y = Math.max(.1, len - .8)); o.userData.foot.position.y = -len + .17; };
+  G.FL = mkTele(2.6, steelY); lg.add(G.FL);
+  G.RL = mkTele(2.6, steelY); lg.add(G.RL);
+  const mkMid = () => { const o = new THREE.Group(); o.add(box(1.2, .8, 9.2, steelY, 0, .4, 0)); [-3.6, 3.6].forEach(z => o.add(box(1.0, .5, 1.0, steelD, 0, -.05, z)));
+    const sl = new THREE.Group(); sl.add(box(2.4, .7, 2.6, steelD, 0, .35, 0)); [-1.0, 1.0].forEach(z => { const p = legPost(steelY, .8); p.position.set(0, 0, z); sl.add(p); }); sl.add(box(3.0, .5, 2.4, steelY, 0, 0, 0));
+    sl.position.y = .8; o.add(sl); o.userData = { sl }; return o; };
+  G.FML = mkMid(); G.RML = mkMid(); lg.add(G.FML, G.RML);
+  const setMid = (o, x, yBase, lift) => { const y = yBase + (lift ? .45 : 0); o.position.set(x, y, 0); const sl = o.userData.sl, h = YB - y - .8; sl.position.y = .8 + h; sl.children[1].scale.y = sl.children[2].scale.y = h; sl.children[0].position.y = -h + .35; sl.children[3].position.y = 0; sl.children[1].position.y = sl.children[2].position.y = 0; };
+  // winch trolley + spreader (hanging frame) + hoist ropes – sheets 30, 32–33
+  G.WT = new THREE.Group(); G.WT.add(box(3.4, 1.0, 3.4, steelY, 0, .5, 0)); [-1, 1].forEach(z => { const d = mesh(new THREE.CylinderGeometry(.55, .55, 1.2, 16), steelD); d.rotation.x = Math.PI / 2; d.position.set(.6 * z, 1.45, 0); G.WT.add(d); }); G.WT.add(box(1.2, 1.4, 1.2, steelD, -1.2, 1.7, 1.2));
+  lg.add(G.WT);
+  G.ropes = [-.7, .7].map(z => { const r = legPost(steelD, .07); r.position.z = z; lg.add(r); return r; });
+  G.SP = new THREE.Group(); G.SP.add(box(1.0, .5, 6.0, steelY, 0, .25, 0)); [-2.2, 2.2].forEach(z => G.SP.add(box(.3, .3, .3, steelD, 0, -.1, z))); lg.add(G.SP);
+  // 10 t service crane on the top chord – sheet 31
+  G.SC = new THREE.Group(); G.SC.add(box(1.2, .6, 2.2, steelY, 0, .3, 0), box(.5, 3.0, .5, steelY, 0, 2.1, 0), box(7.0, .45, .45, steelY, 3.5, 3.4, 0));
+  const scRope = legPost(steelD, .06); G.SC.add(scRope); G.scRope = scRope; G.scHook = box(.5, .5, .5, steelD); G.SC.add(G.scHook); lg.add(G.SC);
+  // brackets – sheets 28–29 (pier bracket clamps the pier head, pier side bracket on the pier face)
+  const mkPB = () => { const o = new THREE.Group(); [-1.95, 1.95].forEach(x => o.add(box(.8, 1.2, 8.2, steelR, x, 0, 0))); [-3.7, 3.7].forEach(z => o.add(box(4.7, .8, .8, steelR, 0, .1, z))); return o; };
+  const mkPSB = () => { const o = new THREE.Group(); o.add(box(1.7, .35, 3.6, steelR, .85, 1.0, 0), box(.5, 2.6, 3.0, steelR, .25, -.1, 0)); [-1.2, 1.2].forEach(z => o.add(member(V(.25, -1.3, z), V(1.6, .85, z), .3, steelR))); return o; };
+  G.pbs = [0, 1, 2].map(() => { const o = mkPB(); lg.add(o); return o; });
+  G.psbs = [0, 1].map(() => { const o = mkPSB(); lg.add(o); return o; });
+  // hanging frames + PT bars (one per hung segment) – sheets 32–33
+  G.hfs = []; for (let i = 0; i < 15; i++) { const o = new THREE.Group(); o.add(box(.9, .5, 6.0, steelY, 0, .25, 0)); [-.65, .65].forEach(z => { const b = legPost(barMat, .1); b.position.set(0, YB - YT, z); b.scale.y = YB - YT - .5; o.add(b); }); lg.add(o); G.hfs.push(o); }
+  // load-test weights (Att.4 SEQ 3) and stressing platforms (กระเช้า) at the closure joints
+  G.blocks = []; s1.segs.filter(q => q.kind === 'typ').forEach(q => { const o = new THREE.Group(); o.add(box(2.0, 1.6, 4.2, M.concDark, 0, -.8, 0)); [-.65, .65].forEach(z => { const b = legPost(barMat, .1); b.position.set(0, YB - YT, z); b.scale.y = YB - YT; o.add(b); }); o.position.set(q.x, YT, 0); lg.add(o); G.blocks.push(o); });
+  G.plats = [0, 1].map(() => { const o = new THREE.Group(); o.add(box(2.4, .12, 7.0, ply, 0, -DEP - 1.2, 0)); [[-1.1, -3.4], [1.1, -3.4], [-1.1, 3.4], [1.1, 3.4]].forEach(([x, z]) => o.add(box(.08, 1.2, .08, steelD, x, -DEP - .6, z))); o.add(box(2.4, .9, .05, steelY, 0, -DEP - .75, -3.5), box(2.4, .9, .05, steelY, 0, -DEP - .75, 3.5)); lg.add(o); return o; });
+  // carried segment is the real element: lift animation moves it; trailer is its own element
+  const lgEl = addEl({ id: 'LG', name: 'Launching gantry JP700-40 (96 m overhead, 700 t)', cat: 'lg', grp: 'Launching gantry', obj: lg, temp: true, start: date('LG-ASM')[0], finish: date('LG-ASM')[1], dwg: 'MS Att.2 / JP700-40', src: SRC, noShadow: false, qty: { L: 96, W: '≈ 700 t span capacity' } });
+  // mobile crane for the first span (crawler) and segment trailer
+  const mc = new THREE.Group(); { mc.add(box(7, 1.2, 1.1, steelD, 0, .6, -1.9), box(7, 1.2, 1.1, steelD, 0, .6, 1.9), box(5.5, 1.6, 4.4, steelY, 0, 2.0, 0)); const sl = new THREE.Group(); sl.position.y = 2.8; sl.add(box(2.2, 2.4, 2.0, steelY, 1.2, 1.0, 1.6), box(3.2, 2.0, 3.4, steelD, -2.6, .8, 0));
+    const boom = mesh(new THREE.BoxGeometry(1, 1.1, 1.1), M.latY); boom.geometry.translate(.5, 0, 0); boom.scale.x = 30; sl.add(boom); mc.add(sl); const rope = legPost(steelD, .06); mc.add(rope); const hk = box(.7, .9, .7, steelR); mc.add(hk); mc.userData = { sl, boom, rope, hk }; }
+  mc.position.set(16, 0, -10);
+  addEl({ id: 'MC', name: 'Crawler crane (first span segments + gantry assembly)', cat: 'crane', grp: L2('รถเครน', 'Mobile crane'), obj: mc, temp: true, start: date('FS-CRANE')[0], finish: D(date('FS-CRANE')[0]) + DAY / 3, rmS: date('LG-ASM')[1], rmE: D(date('LG-ASM')[1]) + DAY / 2, dwg: 'MS 5.4.1', src: SRC + L2(' · ตำแหน่งเครนสมมติ', ' · crane position assumed') });
+  const trk = new THREE.Group(); { const body = new THREE.Group(); body.add(box(2.6, 3.0, 2.6, steelY, 10.2, 1.9, 0), box(10.5, .5, 2.8, steelD, 3.75, 1.35, 0)); for (const x of [-.8, .4, 6.4, 7.6, 10.4]) [-1.1, 1.1].forEach(z => { const w = mesh(new THREE.CylinderGeometry(.5, .5, .4, 12), steelD); w.rotation.x = Math.PI / 2; w.position.set(x, .5, z); body.add(w); });
+    trk.add(body); trk.userData.body = body; trk.userData.loads = {}; [[LT, false], [LP, true], [LE, true]].forEach(([L, solid]) => { const m = mesh(segGeo(L, solid), M.conc); m.position.set(0, 1.6 + DEP + .02, 0); m.visible = false; body.add(m); trk.userData.loads[L] = m; }); }
+  addEl({ id: 'TRK', name: 'Low-bed trailer (segment delivery from below)', cat: 'truck', grp: L2('รถขนส่งชิ้นส่วน', 'Segment delivery'), obj: trk, temp: true, start: date('FS-CRANE')[0], finish: D(date('FS-CRANE')[0]) + 600000, dwg: 'MS 4.1 / 9.0', src: SRC, noShadow: true });
+  // jersey barriers around the work zone (context)
+  { const g = new THREE.BoxGeometry(2.0, .8, .5); g.translate(0, .4, 0); const n = 2 * 150, im = new THREE.InstancedMesh(g, M.white, n), mx = new THREE.Matrix4(); let i = 0; for (let x = -60; x < 315 && i < n - 1; x += 2.5) [-5.6, 5.6].forEach(z => { mx.makeTranslation(x, 0, z); im.setMatrixAt(i++, mx); }); im.count = i; im.userData.ctx = true; api.gCtx.add(im); }
+
+  // labels for the moving parts (positions refreshed in updateProject)
+  const LB = {}; [['LG', 'Launching gantry 96 m', '#ff8787'], ['WT', 'Winch trolley 120 t', '#ffd43b'], ['FL', 'FL', '#ffd43b'], ['FML', 'FML', '#ffd43b'], ['RML', 'RML', '#ffd43b'], ['RL', 'RL', '#ffd43b'], ['SC', '10T service crane', '#ffd43b']].forEach(([k, t, c]) => { const l = label(t, V(0, 0, 0), c, 'lg' + k, 'temp', k === 'LG' ? .6 : .45); l.el = lgEl; LB[k] = l; });
+
+  /* ---------- MS-tab steps (one per stage, bullets = sub-sequences) ---------- */
+  const stepOf = (ph, t, extra) => PROJECT.steps.push({ d: ph.a, dw: ph.code, t, b: extra });
+  const pf = PH.filter(p => p.stage === 'crane'); stepOf(pf[0], L2('First span: Pier segment ML32 + End segment ML33 (รถเครน)', 'First span: pier segment ML32 + end segment ML33 (mobile crane)'), pf.map(p => L2(p.th, p.en)));
+  PH.filter(p => p.stage === 'asm' || p.stage === 'load').forEach(p => stepOf(p, L2(p.th, p.en).split(' · ')[0], L2(p.th, p.en).split(' · ').slice(1)));
+  SP.forEach(s => {
+    if (s.k > 1) { const ps = PH.filter(p => p.s === s && p.stage === 'prep'); stepOf(ps[0], L2(`ย้าย Gantry เข้าช่วง ${s.lbl}`, `Move the gantry to span ${s.lbl}`), ps.map(p => `${p.code}: ${L2(p.th, p.en)}`)); }
+    const hs = PH.filter(p => p.s === s && p.stage === 'hang'); stepOf(hs[0], L2(`ติดตั้งชิ้นส่วน ${s.lbl} (${hs.length} ชิ้น)`, `Erect segments ${s.lbl} (${hs.length} pieces)`), [L2('ส่งชิ้นส่วนจากด้านล่างด้วยรถพ่วง · Winch trolley ยกขึ้นแขวนด้วย Hanging frame + PT bar', 'Trailer below · winch trolley lifts and hangs each segment on a hanging frame + PT bars'), L2('ลำดับ: จากด้านหน้า (' + s.front + ') ไปด้านหลัง (สมมติ)', 'Order: front (ML' + s.front + ') to rear (assumed)')]);
+    const cs = PH.filter(p => p.s === s && ['joint', 'cast', 'cure', 'stress', 'fin'].includes(p.stage)); stepOf(cs[0], L2(`Closure joint + ดึงลวด ${s.lbl}`, `Closure joints + stressing ${s.lbl}`), cs.map(p => L2(p.th, p.en)));
+  });
+
+  KK.api = { G, LB, lgEl, mc, trk, segEl, s1, SP, PIECES, YT, YB, YTT, TH, YP, DEP, ACT, FH, setTele, setMid };
+  { const st = document.createElement('style'); st.textContent = '#seqbox{position:fixed;left:414px;right:324px;top:78px;z-index:4;padding:8px 14px;pointer-events:none;display:none}#seqbox .sq-h{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--mut)}#seqbox .sq-c{background:#c92a2a;color:#fff;border-radius:6px;padding:1px 8px;font-weight:700}#seqbox .sq-t{margin-left:auto;font-weight:600}#seqbox .sq-b{font-size:14.5px;font-weight:600;margin-top:3px;line-height:1.35}body.hideL #seqbox{left:12px}body.hideR #seqbox{right:12px}body.noui #seqbox{display:none!important}@media (max-width:900px){#seqbox{left:12px;right:12px;top:auto;bottom:120px}}'; document.head.appendChild(st); }
+}
+
+/* Per-frame hook: replay the erection phases up to the current time and pose the gantry. */
+let seqBox = null, seqKey = '';
+function updateProject(api, t, dt) {
+  const K = KK.api; if (!K) return;
+  const { G, LB, mc, trk, segEl, s1, PIECES, YT, YB, YTT, TH, YP, DEP, ACT, FH, setTele, setMid } = K, lerp = api.lerp;
+  const S = { F: FH(s1), fml: s1.xf, rml: s1.xr + .6, fmlY: YT, fmlLift: false, rmlLift: false, rl: FH(s1) - 60, rlLen: ACT.RLoff, rlVis: false, trol: FH(s1) - 50, sc: FH(s1) - 8, scX: null, scHook: null, hook: YTT - 1,
+    flLen: ACT.FLoff + 2, hf: {}, plat: [], pb: {}, psb: {}, pbMove: null, psbMove: null, placed: {}, carry: null, spread: null, truck: null, blocks: 0, asm: 1, craneHook: null };
+  let cur = null;
+  for (const p of KK.ph) { if (p.a > t) break; S.carry = null; S.spread = null; S.truck = null; S.craneHook = null; S.scX = null; S.scHook = null;
+    p.fn(S, Math.min(1, (t - p.a) / (p.b - p.a))); cur = p; }
+  if (cur && t > cur.b) { S.carry = null; S.spread = null; S.truck = null; S.scX = null; S.scHook = null; if (cur.stage !== 'crane') S.craneHook = null; }
+  KK.cur = cur;
+  // truss + pieces (assembly)
+  G.truss.position.set(S.F, YB, 0);
+  G.pieces.forEach((m, i) => m.visible = S.asm >= 1 || S.asm >= (i + 1) / 9 * .7);
+  const legsOn = S.asm >= .78;
+  G.FL.position.set(S.F - .8, YB, 0); setTele(G.FL, S.flLen); G.FL.visible = legsOn;
+  G.RL.visible = S.rlVis; G.RL.position.set(S.rl, YB, 0); setTele(G.RL, S.rlLen);
+  setMid(G.FML, S.fml, S.fmlY, S.fmlLift); setMid(G.RML, S.rml, YT, S.rmlLift); G.FML.visible = G.RML.visible = S.asm >= .72;
+  const trolOn = S.asm >= .86; G.WT.visible = trolOn; G.WT.position.set(S.trol, YTT + .18, 0);
+  G.SC.visible = S.asm >= .93; const scx = S.scX != null ? S.scX - 6.5 : S.sc; G.SC.position.set(scx, YTT + .18, 0);
+  const scLen = S.scHook != null ? (YTT + 3.4) - S.scHook : 1.5; G.scRope.position.set(6.8, 3.4, 0); G.scRope.scale.y = Math.max(.2, scLen - .2); G.scHook.position.set(6.8, 3.4 - scLen, 0);
+  // hoist + spreader
+  const hookY = S.spread ? S.spread.y + .5 : S.hook;
+  G.ropes.forEach(r => { r.visible = trolOn; r.position.set(S.trol, YTT + .2, r.position.z); r.scale.y = Math.max(.2, YTT + .2 - hookY); });
+  G.SP.visible = trolOn; G.SP.position.set(S.spread ? S.spread.x : S.trol, hookY - .5, 0);
+  // brackets
+  const pbX = Object.keys(S.pb).map(Number); if (S.pbMove) pbX.push(null);
+  G.pbs.forEach((o, i) => { if (i < pbX.length) { o.visible = true; const x = pbX[i] ?? S.pbMove.x, y = pbX[i] == null ? S.pbMove.y : 11.0; o.position.set(x, y, 0); } else o.visible = false; });
+  const psbX = Object.keys(S.psb).map(Number); if (S.psbMove) psbX.push(null);
+  G.psbs.forEach((o, i) => { if (i < psbX.length) { o.visible = true; const x = psbX[i] ?? S.psbMove.x, y = psbX[i] == null ? S.psbMove.y : 10.3; o.position.set(x + 1.5, y, 0); } else o.visible = false; });
+  // hanging frames
+  const hfs = Object.entries(S.hf); G.hfs.forEach((o, i) => { if (i < hfs.length) { o.visible = true; o.position.set(hfs[i][1], YT, 0); const bh = YB - YT - .5; o.children.slice(1).forEach(b => { b.position.y = YB - YT; b.scale.y = bh; }); } else o.visible = false; });
+  G.blocks.forEach((o, i) => o.visible = S.blocks > (i + .5) / G.blocks.length);
+  G.plats.forEach((o, i) => { if (i < S.plat.length) { o.visible = true; o.position.set(S.plat[i], YT, 0); } else o.visible = false; });
+  // segments: carried one follows the hook, others stay at their final place
+  for (const e of KK.segs) { const sg = e.segRef; if (S.carry && S.carry.id === sg.id) e.obj.position.set(S.carry.x, S.carry.y, 0); else e.obj.position.set(sg.x, YT, 0); }
+  // trailer (its load is a stand-in mesh until the hook takes the real segment element)
+  trk.userData.body.visible = !!S.truck; for (const L in trk.userData.loads) trk.userData.loads[L].visible = !!(S.truck && S.truck.load && Math.abs(S.truck.load.L - L) < .01);
+  if (S.truck) { trk.position.set(S.truck.x, 0, S.truck.z); trk.rotation.y = S.truck.dir > 0 ? 0 : Math.PI; }
+  // mobile crane: crawl along the road, slew and luff to the hook target
+  if (mc.visible) { const h = S.craneHook || { x: 30, y: YT + 8, z: 0 }, u = mc.userData; const bx = api.clamp(h.x - 16, -50, 60); mc.position.x = lerp(mc.position.x, bx, dt ? Math.min(1, dt * 2) : 1);
+    const dx = h.x - mc.position.x, dz = h.z - mc.position.z, r = Math.max(6, Math.hypot(dx, dz)), Lb = 30, ang = Math.acos(Math.min(.98, (r - 1) / Lb));
+    u.sl.rotation.y = -Math.atan2(dz, dx); u.boom.rotation.z = ang; const tipY = 2.8 + Math.sin(ang) * Lb; u.rope.position.set(h.x - mc.position.x, tipY, h.z - mc.position.z); u.rope.scale.y = Math.max(.5, tipY - h.y); u.hk.position.set(h.x - mc.position.x, h.y, h.z - mc.position.z); }
+  // labels follow the parts
+  LB.LG.s.position.set(S.F - 48, YTT + 3.2, 0); LB.WT.s.position.set(S.trol, YTT + 4.2, 0); LB.FL.s.position.set(S.F - .8, legsOn ? YB - S.flLen - 1.2 : -200, 3.4);
+  const midOn = S.asm >= .72; LB.FML.s.position.set(S.fml, midOn ? YT + 2.2 : -200, 6.2); LB.RML.s.position.set(S.rml, midOn ? YT + 2.2 : -200, 6.2); LB.FL.s.visible; LB.RL.s.position.set(S.rl, S.rlVis ? YT + 2.2 : -200, 4.0); LB.SC.s.position.set(scx + 3, G.SC.visible ? YTT + 5.4 : -200, 0); LB.WT.s.position.y = trolOn ? YTT + 4.2 : -200;
+  // follow-gantry camera (button in the timeline row, or ?follow=1)
+  if (!KK.followBtn && document.getElementById('tlrow')) { const b = document.createElement('button'); b.id = 'btnFollow'; b.textContent = api.L2('🎥 ติดตาม Gantry', '🎥 Follow gantry');
+    b.onclick = () => { KK.follow = !KK.follow; b.classList.toggle('on', KK.follow); KK.lastF = null; }; document.getElementById('tlrow').insertBefore(b, document.getElementById('tlwrap')); KK.followBtn = b;
+    if (new URLSearchParams(location.search).get('follow') === '1') b.onclick(); }
+  if (KK.follow && api.controls) { const fx = S.F - 40; if (KK.lastF != null) { const d = fx - KK.lastF; api.camera.position.x += d; api.controls.target.x += d; } KK.lastF = fx; }
+  // sequence box
+  if (!seqBox) { seqBox = document.createElement('div'); seqBox.id = 'seqbox'; seqBox.className = 'glass'; document.body.appendChild(seqBox); }
+  const d = new Date(t), hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const k = (cur ? cur.code + cur.th : '') + hm + (api.L2('t', 'e'));
+  if (k !== seqKey) { seqKey = k; seqBox.style.display = cur ? 'block' : 'none';
+    if (cur) seqBox.innerHTML = `<div class="sq-h"><span class="sq-c">${cur.code}</span><span>${api.L2('ช่วง', 'Span')} ${cur.s.lbl}</span><span class="sq-t">${d.toLocaleDateString(api.L2('th', 'en') === 'th' ? 'th-TH' : 'en-GB', { day: 'numeric', month: 'short' })} ${hm}</span></div><div class="sq-b">${api.L2(cur.th, cur.en)}${t > cur.b ? api.L2(' — แล้วเสร็จ', ' — done') : ''}</div>`; }
+}
+/* <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+   END OF PROJECT BLOCK
+   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+
+/* =====================================================================================
+   ENGINE – UI strings (TH / EN)
+   ===================================================================================== */
+const NS = 'bim4d.' + PROJECT.id + '.';
+const store = { get: (k, d) => { try { const v = localStorage.getItem(NS + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }, set: (k, v) => { try { localStorage.setItem(NS + k, JSON.stringify(v)); } catch (e) { } }, del: k => { try { localStorage.removeItem(NS + k); } catch (e) { } } };
+LANG = store.get('lang', 'th'); if (QS.get('lang') === 'en' || QS.get('lang') === 'th') LANG = QS.get('lang');
+document.documentElement.lang = LANG;
+const UI = {
+  panels: ['☰ แผง', '☰ Panels'], tour: ['🚁<span class="lbl"> Drone Tour</span>', '🚁<span class="lbl"> Drone tour</span>'], fly: ['🎮<span class="lbl"> บินโดรนเอง</span>', '🎮<span class="lbl"> Fly drone</span>'],
+  sound: ['🔇<span class="lbl"> เสียง</span>', '🔇<span class="lbl"> Sound</span>'], music: ['♪<span class="lbl"> ดนตรี</span>', '♪<span class="lbl"> Music</span>'],
+  shot: ['บันทึกภาพหน้าจอ PNG', 'Save screenshot (PNG)'], glb: ['Export โมเดล 3D เป็น GLB', 'Export 3D model as GLB'],
+  import: ['📂<span class="lbl"> อัปเดตแผน</span>', '📂<span class="lbl"> Update programme</span>'], importT: ['อัปโหลดแผนงาน (PDF / MS Project XML / CSV / JSON)', 'Upload a programme (PDF / MS Project XML / CSV / JSON)'],
+  labels: ['🏷<span class="lbl"> ป้าย</span>', '🏷<span class="lbl"> Labels</span>'], labelsT: ['เปิด/ปิดข้อความกำกับโมเดล (L)', 'Show / hide annotations (L)'],
+  panelL: ['เปิด/ปิดแผงซ้าย ([)', 'Show / hide left panel ([)'], panelR: ['เปิด/ปิดแผงขวา (])', 'Show / hide right panel (])'], hideUI: ['ซ่อน UI (H)', 'Hide UI (H)'],
+  tabGantt: ['4D แผนงาน', '4D programme'], tabMS: ['Method Statement', 'Method statement'], tabModel: ['โมเดล BIM', 'BIM model'], tabSrc: ['ข้อมูลแบบ', 'Data sources'],
+  simDate: ['วันที่จำลอง (4D)', 'Simulation date (4D)'], scurve: ['S-Curve แผนงาน', 'Programme S-curve'], activities: ['กิจกรรมที่กำลังดำเนินการ', 'Activities in progress'],
+  impTitle: ['📂 อัปเดตแผนงาน 4D จากไฟล์', '📂 Update the 4D programme from a file'],
+  impHelp: ['รองรับ: <b>PDF</b> ที่พิมพ์จาก MS Project (ID / Task Name / Duration / Start / Finish) · <b>MS Project XML</b> · <b>CSV</b> (ID, Task Name, Start, Finish) · <b>JSON</b><br>ไฟล์ .mpp ต้องแปลงเป็น XML/PDF ก่อน', 'Supported: <b>PDF</b> printed from MS Project (ID / Task Name / Duration / Start / Finish) · <b>MS Project XML</b> · <b>CSV</b> (ID, Task Name, Start, Finish) · <b>JSON</b><br>.mpp must be converted to XML/PDF first'],
+  impDrop: ['ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์<br><small>.pdf · .xml · .csv · .json</small>', 'Drop a file here or click to choose<br><small>.pdf · .xml · .csv · .json</small>'],
+  impReset: ['↺ ใช้แผนเริ่มต้น', '↺ Use default programme'], impExport: ['⬇ schedule.json ปัจจุบัน', '⬇ current schedule.json'], impApply: ['✔ นำไปใช้กับแบบจำลอง', '✔ Apply to the model'],
+  flyHelp: ['โหมดบินโดรน: W/A/S/D เคลื่อนที่ · R/F ขึ้น/ลง · ลากเมาส์หันกล้อง · Shift เร่ง · Esc ออก', 'Drone mode: W/A/S/D move · R/F up/down · drag to look · Shift = faster · Esc = exit'],
+  play: ['▶ เล่น 4D', '▶ Play 4D'], pause: ['❚❚ หยุด', '❚❚ Pause'], speeds: [['2.4 ชม./วินาที', '12 ชม./วินาที', '2 วัน/วินาที', '1 สัปดาห์/วินาที', '15 วัน/วินาที', '1 เดือน/วินาที'], ['2.4 h/second', '12 h/second', '2 days/second', '1 week/second', '15 days/second', '1 month/second']],
+};
+document.querySelectorAll('[data-i]').forEach(el => el.innerHTML = tx(UI[el.dataset.i]));
+document.querySelectorAll('[data-it]').forEach(el => el.title = tx(UI[el.dataset.it]));
+document.querySelectorAll('#speed option').forEach((o, i) => o.textContent = (LANG === 'en' ? UI.speeds[1] : UI.speeds[0])[i]);
+document.getElementById('ttl').textContent = tx(PROJECT.title); document.getElementById('sub').textContent = tx(PROJECT.subtitle);
+document.getElementById('loadTxt').textContent = tx(PROJECT.title) + ' …';
+const T0 = D(PROJECT.T0), T1 = D(PROJECT.T1), OPEN = D(PROJECT.openDate || PROJECT.T1);
+
+/* ---- schedule: defaults + user upload (browser storage) ---- */
+const SCHED_USER = store.get('schedule', null);
+const SDATES = Object.assign({}, PROJECT.schedule.dates, SCHED_USER && SCHED_USER.dates || {});
+const SCHED = { user: !!(SCHED_USER && SCHED_USER.dates), source: SCHED_USER ? SCHED_USER.source : tx(PROJECT.schedule.sourceName), imported: SCHED_USER && SCHED_USER.imported };
+const SRC = SCHED.user ? 'Uploaded: ' + SCHED.source : tx(PROJECT.schedule.sourceName);
+
+/* =====================================================================================
+   RENDERER / SCENE
+   ===================================================================================== */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.5, 9000);
+const controls = new OrbitControls(camera, canvas); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * .495; controls.maxDistance = 2500;
+const CEN = new THREE.Vector3(...PROJECT.center); controls.target.copy(CEN);
+const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .8, .5, .82); composer.addPass(bloom); composer.addPass(new OutputPass());
+const hemi = new THREE.HemisphereLight(0xdfefff, 0x5a5040, .6); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 2.2); sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
+Object.assign(sun.shadow.camera, { left: -300, right: 300, top: 300, bottom: -300, near: 10, far: 1600 }); sun.shadow.bias = -.0004; sun.shadow.normalBias = .6; sun.target.position.copy(CEN); scene.add(sun, sun.target);
+const gStruct = new THREE.Group(), gCtx = new THREE.Group(), gLabels = new THREE.Group(); scene.add(gStruct, gCtx, gLabels);
+
+/* ---- annotations ---- */
+const LABELS = [], LBL = Object.assign({ all: true, off: [] }, store.get('labels', {}));
+if (QS.get('labels') === '0') LBL.all = false; if (QS.get('lbloff')) LBL.off = QS.get('lbloff').split(',');
+const saveLBL = () => store.set('labels', LBL);
+function applyLabels() { for (const l of LABELS) l.s.visible = LBL.all && !LBL.off.includes(l.key) && (!l.el || l.el.obj.visible); document.getElementById('btnLbl').classList.toggle('on', LBL.all); }
+
+/* ---- procedural textures ---- */
+function cnv(w, h, f) { const c = document.createElement('canvas'); c.width = w; c.height = h; f(c.getContext('2d'), w, h); return c; }
+const R = (seed => () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; })(20250128);
+const ctex = (c, rep = true) => { const t = new THREE.CanvasTexture(c); if (rep) t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+function texConcrete(base) { return ctex(cnv(512, 512, (g, w, h) => { g.fillStyle = base; g.fillRect(0, 0, w, h); for (let i = 0; i < 9000; i++) { const v = 150 + R() * 90 | 0; g.fillStyle = `rgba(${v},${v},${v - 6},${R() * .12})`; g.fillRect(R() * w, R() * h, 1 + R() * 3, 1 + R() * 3); } g.strokeStyle = 'rgba(60,60,60,.18)'; g.lineWidth = 2; for (let x = 0; x <= w; x += 128) { g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); } for (let y = 0; y <= h; y += 256) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } })); }
+function texLattice(col) { return ctex(cnv(128, 128, (g, w, h) => { g.strokeStyle = col; g.lineWidth = 7; g.strokeRect(3, 3, w - 6, h - 6); g.lineWidth = 4; g.beginPath(); g.moveTo(0, 0); g.lineTo(w, h); g.moveTo(w, 0); g.lineTo(0, h); g.stroke(); })); }
+function texWindows(lit) { return ctex(cnv(256, 512, (g, w, h) => { g.fillStyle = lit ? '#000' : '#c9c5bd'; g.fillRect(0, 0, w, h); for (let y = 8; y < h; y += 32) for (let x = 8; x < w; x += 32) { g.fillStyle = lit ? (R() < .45 ? `rgb(255,${200 + R() * 40 | 0},${120 + R() * 60 | 0})` : '#000') : (R() < .5 ? '#40556b' : '#5a7088'); g.fillRect(x, y, 18, 20); } })); }
+function texWaterNormals() { const N = 256, waves = []; for (let i = 0; i < 28; i++) { const fx = 1 + (R() * 14 | 0), fy = (R() * 14 | 0) - 7; waves.push([fx, fy, R() * 6.28, 1 / Math.hypot(fx, fy)]); } const hgt = (x, y) => { let v = 0; for (const [fx, fy, ph, a] of waves) v += a * Math.sin(2 * Math.PI * (fx * x + fy * y) / N + ph); return v; };
+  const t = new THREE.CanvasTexture(cnv(N, N, g => { const img = g.createImageData(N, N); for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { const dx = (hgt(x + 1, y) - hgt(x - 1, y)) * 1.3, dy = (hgt(x, y + 1) - hgt(x, y - 1)) * 1.3, l = Math.hypot(dx, dy, 1), i = (y * N + x) * 4; img.data[i] = (-dx / l * .5 + .5) * 255; img.data[i + 1] = (-dy / l * .5 + .5) * 255; img.data[i + 2] = (1 / l * .5 + .5) * 255; img.data[i + 3] = 255; } g.putImageData(img, 0, 0); })); t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; }
+function texGround(a, b) { return ctex(cnv(512, 512, (g, w, h) => { g.fillStyle = a; g.fillRect(0, 0, w, h); for (let i = 0; i < 14000; i++) { g.fillStyle = R() < .5 ? b : 'rgba(255,255,255,.05)'; g.globalAlpha = R() * .5; g.fillRect(R() * w, R() * h, 2, 2); } g.globalAlpha = 1; })); }
+function gradientTex(top, bot) { return ctex(cnv(4, 256, (g, w, h) => { const gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, w, h); }), false); }
+
+/* ---- materials (shared palette – projects may add their own) ---- */
+const tConc = texConcrete('#bdbab2'), tLat = texLattice('#f2b705'), tLatR = texLattice('#d9480f');
+const M = {
+  conc: new THREE.MeshStandardMaterial({ color: 0xd2cec6, map: tConc, roughness: .88, side: THREE.DoubleSide }), concDark: new THREE.MeshStandardMaterial({ color: 0x9d9a93, map: tConc, roughness: .9 }),
+  pylon: new THREE.MeshStandardMaterial({ color: 0xeeeae2, map: tConc, roughness: .75 }), pylonDark: new THREE.MeshStandardMaterial({ color: 0x9aa1a9, map: tConc, roughness: .7 }),
+  fresh: new THREE.MeshStandardMaterial({ color: 0x7f7c76, map: tConc, roughness: .55, side: THREE.DoubleSide }), rebar: new THREE.MeshStandardMaterial({ color: 0xd9480f, emissive: 0x6b1d00, wireframe: true, transparent: true, opacity: .85 }),
+  wip: new THREE.MeshStandardMaterial({ color: 0xffa94d, emissive: 0x4a2000, roughness: .7, transparent: true, opacity: .9 }), gold: new THREE.MeshStandardMaterial({ color: 0xd9a520, metalness: .9, roughness: .28 }),
+  cable: new THREE.MeshStandardMaterial({ color: 0xe9c54a, metalness: .35, roughness: .38 }), cableWip: new THREE.MeshStandardMaterial({ color: 0xff5a1f, emissive: 0x6a1a00, roughness: .4 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0xd9480f, metalness: .4, roughness: .55 }), yellow: new THREE.MeshStandardMaterial({ color: 0xf5b700, metalness: .3, roughness: .6 }),
+  timber: new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: .9 }), dark: new THREE.MeshStandardMaterial({ color: 0x2f3439, metalness: .5, roughness: .6 }),
+  latY: new THREE.MeshStandardMaterial({ map: tLat, transparent: true, alphaTest: .3, side: THREE.DoubleSide, roughness: .6 }), latR: new THREE.MeshStandardMaterial({ map: tLatR, transparent: true, alphaTest: .3, side: THREE.DoubleSide, roughness: .6 }),
+  barrier: new THREE.MeshStandardMaterial({ color: 0xe1ddd5, roughness: .8 }), rail: new THREE.MeshStandardMaterial({ color: 0xc9a227, metalness: .8, roughness: .35 }),
+  water: new THREE.MeshStandardMaterial({ color: 0x1c7ed6, metalness: .3, roughness: .4 }), elec: new THREE.MeshStandardMaterial({ color: 0xf08c00, metalness: .3, roughness: .5 }),
+  lamp: new THREE.MeshStandardMaterial({ color: 0x868e96, metalness: .7, roughness: .4 }), lampHead: new THREE.MeshStandardMaterial({ color: 0xfff3bf }), avi: new THREE.MeshStandardMaterial({ color: 0xff2222 }),
+  white: new THREE.MeshStandardMaterial({ color: 0xf8f5ee, roughness: .7 }), rock: new THREE.MeshStandardMaterial({ color: 0x6b5e4f, roughness: 1 }),
+  ghost: new THREE.MeshBasicMaterial({ color: 0x4dabf7, transparent: true, opacity: .07, depthWrite: false }), bimWip: new THREE.MeshLambertMaterial({ color: 0xff7f1f, emissive: 0x552200 }),
+  bimTemp: new THREE.MeshLambertMaterial({ color: 0xffd43b, transparent: true, opacity: .55 }), blueFill: new THREE.MeshBasicMaterial({ color: 0x0b2a4a, transparent: true, opacity: .25, depthWrite: false }),
+};
+const LM = { done: new THREE.LineBasicMaterial({ color: 0x74d7ff }), wip: new THREE.LineBasicMaterial({ color: 0xffa94d }), temp: new THREE.LineBasicMaterial({ color: 0xffe066, transparent: true, opacity: .6 }), plan: new THREE.LineBasicMaterial({ color: 0x2b5a85, transparent: true, opacity: .35 }) };
+
+/* =====================================================================================
+   BIM REGISTRY + GEOMETRY HELPERS
+   ===================================================================================== */
+const CATS = {}; for (const [k, v] of Object.entries(PROJECT.categories)) CATS[k] = { th: tx(v.t), grp: v.grp, c: v.c };
+const catHidden = {}, ELS = [], elById = {};
+const toT = v => typeof v === 'string' ? D(v) : v;
+function addEl(o) {
+  ['start', 'finish', 'rmS', 'rmE', 'cast'].forEach(k => { if (o[k] != null) o[k] = toT(o[k]); });
+  if (o.kind === 'seg') o.kind = 'cast';
+  o.kind = o.kind || 'gen'; o.src = o.src || SRC; o.grp = o.grp || CATS[o.cat]?.th || o.cat;
+  if (o.kind === 'cast' && o.cast == null) o.cast = o.start + (o.finish - o.start) * .75;
+  o.obj.traverse(m => { if (m.isMesh) { m.userData.el = o; m.userData.base = m.material; m.castShadow = !o.noShadow; m.receiveShadow = true; } });
+  o.obj.userData.el = o; gStruct.add(o.obj);
+  const box = new THREE.Box3().setFromObject(o.obj); o.center = box.getCenter(new THREE.Vector3()); o.box = box;
+  ELS.push(o); elById[o.id] = o; return o;
+}
+const mesh = (g, m) => new THREE.Mesh(g, m);
+function member(a, b, t, mat) { const len = a.distanceTo(b), m = mesh(new THREE.BoxGeometry(t, t, len), mat); m.position.copy(a).add(b).multiplyScalar(.5); m.lookAt(b); return m; }
+function taper(h, Lb, Wb, Lt, Wt) { const g = new THREE.BoxGeometry(1, h, 1), p = g.attributes.position; for (let i = 0; i < p.count; i++) { const t = (p.getY(i) + h / 2) / h; p.setX(i, p.getX(i) * lerp(Lb, Lt, t)); p.setZ(i, p.getZ(i) * lerp(Wb, Wt, t)); } g.translate(0, h / 2, 0); g.computeVertexNormals(); return g; }
+function stadium(len, wid, depth, holeIn = 0) { const r = wid / 2, st = len / 2 - r, sh = new THREE.Shape(); sh.absarc(0, st, r, 0, Math.PI, false); sh.absarc(0, -st, r, Math.PI, Math.PI * 2, false); if (holeIn > 0) { const h = new THREE.Path(), r2 = r - holeIn; h.absarc(0, st, r2, 0, Math.PI, false); h.absarc(0, -st, r2, Math.PI, Math.PI * 2, false); sh.holes.push(h); } const g = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: false, curveSegments: 24 }); g.rotateX(-Math.PI / 2); return g; }
+/* extrudeProfile: 2-D section (array of [u,v] incl. optional holes) swept along a 3-D path given as fn(s) → {p: Vector3, t: tangent}; used for box girders, tunnels, walls … */
+function sweep(section, holes, s0, s1, n, at) {
+  const frame = s => { const { p, t } = at(s), up = new THREE.Vector3(0, 1, 0), side = new THREE.Vector3().crossVectors(t, up).normalize(), u2 = new THREE.Vector3().crossVectors(side, t).normalize(); return { p, side, u2 }; };
+  const rings = []; for (let i = 0; i <= n; i++) { const s = lerp(s0, s1, i / n), f = frame(s); rings.push(section.map(([u, v]) => f.p.clone().addScaledVector(f.side, u).addScaledVector(f.u2, v))); }
+  const pos = [], idx = [], m = section.length;
+  for (let e = 0; e < m; e++) { const e2 = (e + 1) % m, base = pos.length / 3; for (let i = 0; i <= n; i++) { const A = rings[i][e], B = rings[i][e2]; pos.push(A.x, A.y, A.z, B.x, B.y, B.z); } for (let i = 0; i < n; i++) { const a = base + i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
+  const cap = s => { const f = frame(s), sh = new THREE.Shape(section.map(([u, v]) => new THREE.Vector2(u, v))); (holes || []).forEach(h => sh.holes.push(new THREE.Path(h.map(([u, v]) => new THREE.Vector2(u, v))))); const cg = new THREE.ShapeGeometry(sh), p = cg.attributes.position; for (let i = 0; i < p.count; i++) { const v = f.p.clone().addScaledVector(f.side, p.getX(i)).addScaledVector(f.u2, p.getY(i)); p.setXYZ(i, v.x, v.y, v.z); } cg.deleteAttribute('uv'); cg.computeVertexNormals(); return cg; };
+  return mergeGeometries([g, cap(s0), cap(s1)]);
+}
+function makeCrane(H, jib) {   // tower crane: mast, slewing jib (userData.slew), trolley (userData.trol)
+  const g = new THREE.Group(), mast = mesh(new THREE.BoxGeometry(2, H, 2), M.latY.clone()); mast.material.map = tLat.clone(); mast.material.map.repeat.set(1, H / 2); mast.material.map.needsUpdate = true; mast.position.y = H / 2; g.add(mast);
+  const slew = new THREE.Group(); slew.position.y = H; g.add(slew); g.userData.slew = slew;
+  const jb = mesh(new THREE.BoxGeometry(1, 1.6, 1.6), M.latY); jb.geometry.translate(.5, 0, 0); jb.scale.x = jib; slew.add(jb); g.userData.jib = jb;
+  const cj = mesh(new THREE.BoxGeometry(14, 1.4, 1.6), M.latY); cj.position.x = -7; slew.add(cj); const cw = mesh(new THREE.BoxGeometry(3, 2.5, 2.2), M.concDark); cw.position.set(-12.5, -1.6, 0); slew.add(cw);
+  const cab = mesh(new THREE.BoxGeometry(2.4, 2.2, 2.2), M.yellow); cab.position.set(1.5, -1.5, 1.8); slew.add(cab); const apex = mesh(new THREE.ConeGeometry(1.2, 7, 4), M.latY); apex.position.y = 4.3; slew.add(apex);
+  const trol = new THREE.Group(); trol.position.x = jib * .6; slew.add(trol); g.userData.trol = trol;
+  const line = mesh(new THREE.CylinderGeometry(.04, .04, 1, 4), M.dark); line.geometry.translate(0, -.5, 0); line.scale.y = H * .6; trol.add(line);
+  const hook = mesh(new THREE.BoxGeometry(.8, 1, .8), M.steel); hook.position.y = -H * .6; trol.add(hook); return g;
+}
+function label(txt, pos, col = '#f0b429', key = txt, grp = 'struct', scale = 1) {
+  const mc = document.createElement('canvas').getContext('2d'); mc.font = 'bold 44px IBM Plex Sans Thai, sans-serif'; const cw = Math.max(256, Math.ceil(mc.measureText(txt).width) + 64);
+  const c = cnv(cw, 96, (g, w, h) => { g.fillStyle = 'rgba(10,16,28,.78)'; g.beginPath(); g.roundRect(8, 8, w - 16, h - 16, 18); g.fill(); g.strokeStyle = col; g.lineWidth = 4; g.stroke(); g.fillStyle = '#fff'; g.font = 'bold 44px IBM Plex Sans Thai, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, w / 2, h / 2 + 2); });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, transparent: true })); s.position.copy(pos); s.scale.set(5.25 * cw / 96 * scale, 5.25 * scale, 1); s.renderOrder = 10;
+  gLabels.add(s); const l = { key, txt, grp, s, col }; LABELS.push(l); return l;   // set l.el = element to hide the label when that element is not visible
+}
+const date = (key, fallback) => { const v = SDATES[key] || fallback; if (!v) throw new Error('No date for schedule key "' + key + '"'); return v; };
+
+/* ---- API passed to the project ---- */
+const api = { THREE, M, LM, mesh, member, taper, stadium, sweep, makeCrane, label, addEl, elById, ELS, date, dates: SDATES, D, DAY, addD, iso, lerp, clamp, R, L2, tx, gStruct, gCtx, scene, camera, mergeGeometries, texConcrete, texLattice, cnv, ctex, SRC, CATS };
+
+/* =====================================================================================
+   CONTEXT – ground, optional river, city, trees, traffic, sky
+   ===================================================================================== */
+const CX = PROJECT.context || {}, GY = CX.groundY ?? 0;
+api.GY = GY;
+const tGrass = texGround('#5f7d45', 'rgba(40,60,30,.6)'); const groundMat = new THREE.MeshStandardMaterial({ map: tGrass, roughness: 1 });
+let water = null, flatWater = null, bed = null;
+const groundMeshes = [];
+if (CX.water) {   // river: left/right bank polylines [[z, x], …] (x = bank position along main axis at lateral z)
+  const W = CX.water, ZR = 3000, zs = []; for (let z = -ZR; z <= ZR; z += 25) zs.push(z);
+  const bankAt = (T, z) => { if (z <= T[0][0]) return T[0][1]; if (z >= T.at(-1)[0]) return T.at(-1)[1]; for (let i = 0; i < T.length - 1; i++) if (z <= T[i + 1][0]) return lerp(T[i][1], T[i + 1][1], (z - T[i][0]) / (T[i + 1][0] - T[i][0])); };
+  const bl = z => bankAt(W.left, z), br = z => bankAt(W.right, z); api.bankL = bl; api.bankR = br;
+  const cx = (bl(0) + br(0)) / 2, wid = Math.abs(br(0) - bl(0)) + 1200;
+  water = new Water(new THREE.PlaneGeometry(wid, 2 * ZR), { textureWidth: 1024, textureHeight: 1024, waterNormals: texWaterNormals(), sunDirection: new THREE.Vector3(), sunColor: 0xffffff, waterColor: 0x3d4f3a, distortionScale: 1.1, fog: true });
+  water.rotation.x = -Math.PI / 2; water.position.set(cx, W.y, 0); water.material.uniforms.size.value = 2.2; gCtx.add(water);
+  flatWater = mesh(new THREE.PlaneGeometry(wid, 2 * ZR), new THREE.MeshBasicMaterial({ color: 0x74c0fc, transparent: true, opacity: .22, depthWrite: false })); flatWater.rotation.x = -Math.PI / 2; flatWater.position.set(cx, W.y, 0); flatWater.visible = false; scene.add(flatWater);
+  bed = mesh(new THREE.PlaneGeometry(wid, 2 * ZR), new THREE.MeshStandardMaterial({ color: 0x4a4436, roughness: 1 })); bed.rotation.x = -Math.PI / 2; bed.position.set(cx, W.bedY, 0); gCtx.add(bed);
+  [[-1, bl], [1, br]].forEach(([side, f]) => {
+    const pts = side < 0 ? [[-4000, -ZR], ...zs.map(z => [f(z), z]), [-4000, ZR]] : [[4500, ZR], ...zs.slice().reverse().map(z => [f(z), z]), [4500, -ZR]];
+    const g = new THREE.ShapeGeometry(new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z)))); g.rotateX(-Math.PI / 2); const uv = g.attributes.uv, ps = g.attributes.position; for (let i = 0; i < ps.count; i++) uv.setXY(i, ps.getX(i) / 50, ps.getZ(i) / 50);
+    const gm = mesh(g, groundMat); gm.position.y = GY; gm.receiveShadow = true; gCtx.add(gm); groundMeshes.push(gm);
+    const pos = [], idx = []; zs.forEach((z, i) => { const x = f(z); pos.push(x, W.bedY, z, x, GY, z); if (i) { const a = (i - 1) * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); } });
+    const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); wg.setIndex(idx); wg.computeVertexNormals(); const wm = mesh(wg, M.concDark.clone()); wm.material.side = THREE.DoubleSide; wm.userData.bank = true; gCtx.add(wm);
+  });
+} else { const gm = mesh(new THREE.PlaneGeometry(8000, 8000), groundMat); gm.rotation.x = -Math.PI / 2; gm.position.set(CEN.x, GY - .02, CEN.z); gm.receiveShadow = true; gCtx.add(gm); groundMeshes.push(gm); tGrass.repeat.set(160, 160); }
+const inExclude = (x, z) => (CX.city?.exclude || []).some(([x0, z0, x1, z1]) => x >= Math.min(x0, x1) && x <= Math.max(x0, x1) && z >= Math.min(z0, z1) && z <= Math.max(z0, z1));
+const inWater = (x, z) => CX.water && x > Math.min(api.bankL(z), api.bankR(z)) - 6 && x < Math.max(api.bankL(z), api.bankR(z)) + 6;
+const winDay = texWindows(false), winNight = texWindows(true);
+const bldMat = new THREE.MeshStandardMaterial({ map: winDay, emissiveMap: winNight, emissive: 0xffffff, emissiveIntensity: 0, roughness: .8 });
+let city = new THREE.Group(); const col = new THREE.Color(), mtx = new THREE.Matrix4();
+if (CX.city) { const [r0, r1] = CX.city.radius || [120, 1000], list = [];
+  for (let i = 0; i < CX.city.count * 4 && list.length < CX.city.count; i++) { const a = R() * Math.PI * 2, r = r0 + R() * (r1 - r0), x = CEN.x + Math.cos(a) * r, z = CEN.z + Math.sin(a) * r; if (inExclude(x, z) || inWater(x, z)) continue; const far = (r - r0) / (r1 - r0); list.push([x, z, 14 + R() * 26, 14 + R() * 26, r < r0 + 250 ? 5 + R() * 14 : 8 + R() * R() * (45 + 90 * far)]); }
+  const bg = new THREE.BoxGeometry(1, 1, 1); bg.translate(0, .5, 0); city = new THREE.InstancedMesh(bg, bldMat, list.length);
+  list.forEach(([x, z, w, d, h], i) => { mtx.compose(new THREE.Vector3(x, GY, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), (R() - .5) * .3), new THREE.Vector3(w, h, d)); city.setMatrixAt(i, mtx); col.setHSL(.08 + R() * .08, .08 + R() * .1, .72 + R() * .2); city.setColorAt(i, col); });
+  city.castShadow = city.receiveShadow = true; gCtx.add(city); }
+const treeMat = new THREE.MeshStandardMaterial({ color: 0x3f6b2f, roughness: 1, flatShading: true }); const nT = CX.trees || 0;
+const trees = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), treeMat, Math.max(1, nT));
+for (let i = 0; i < nT; i++) { const a = R() * Math.PI * 2, r = 40 + R() * 500, x = CEN.x + Math.cos(a) * r, z = CEN.z + Math.sin(a) * r, ok = !inExclude(x, z) && !inWater(x, z), s = ok ? 2.5 + R() * 3 : .001; mtx.compose(new THREE.Vector3(x, GY + 3 + s * .6, z), new THREE.Quaternion(), new THREE.Vector3(s, s * 1.1, s)); trees.setMatrixAt(i, mtx); col.setHSL(.25 + R() * .08, .45, .25 + R() * .12); trees.setColorAt(i, col); }
+trees.castShadow = true; gCtx.add(trees);
+// traffic on context roads (straight segments)
+const roads = CX.traffic?.roads || [], NC = roads.length ? CX.traffic.count || 30 : 0;
+const asphalt = new THREE.MeshStandardMaterial({ color: 0x404347, roughness: .95 });
+roads.forEach(rd => { const len = Math.hypot(rd.x1 - rd.x0, rd.z1 - rd.z0), wd = (rd.lanes || 2) * 3.5 * 2, m = mesh(new THREE.PlaneGeometry(len, wd), asphalt); m.rotation.x = -Math.PI / 2; m.rotation.z = -Math.atan2(rd.z1 - rd.z0, rd.x1 - rd.x0); m.position.set((rd.x0 + rd.x1) / 2, GY + .03, (rd.z0 + rd.z1) / 2); m.receiveShadow = true; gCtx.add(m); });
+const carGeo = new THREE.BoxGeometry(4.6, 1.5, 2); carGeo.translate(0, .75, 0);
+const cars = new THREE.InstancedMesh(carGeo, new THREE.MeshStandardMaterial({ roughness: .4, metalness: .5 }), Math.max(1, NC)), carData = [];
+for (let i = 0; i < NC; i++) { carData.push({ r: roads[i % roads.length], lane: R() * (roads[i % roads.length].lanes || 2) | 0, dir: R() < .5 ? 1 : -1, p: R(), v: 9 + R() * 6 }); col.setHSL(R(), .5, R() < .3 ? .9 : .35 + R() * .3); cars.setColorAt(i, col); }
+gCtx.add(cars);
+function updateCars(dt) { const d = new THREE.Object3D(); carData.forEach((c, i) => { const len = Math.hypot(c.r.x1 - c.r.x0, c.r.z1 - c.r.z0), a = Math.atan2(c.r.z1 - c.r.z0, c.r.x1 - c.r.x0); c.p = (c.p + dt * c.v / len * c.dir + 1) % 1; const off = c.dir * (1.8 + c.lane * 3.5); d.position.set(lerp(c.r.x0, c.r.x1, c.p) - Math.sin(a) * off, GY + .05, lerp(c.r.z0, c.r.z1, c.p) + Math.cos(a) * off); d.rotation.set(0, -a + (c.dir > 0 ? 0 : Math.PI), 0); d.updateMatrix(); cars.setMatrixAt(i, d.matrix); }); cars.instanceMatrix.needsUpdate = true; }
+// sky, stars
+const sky = new Sky(); sky.scale.setScalar(20000); scene.add(sky);
+const sg = new THREE.BufferGeometry(), sp = []; for (let i = 0; i < 2500; i++) { const th = R() * Math.PI * 2, ph = Math.acos(R() * .95), r = 7000; sp.push(r * Math.sin(ph) * Math.cos(th), r * Math.cos(ph), r * Math.sin(ph) * Math.sin(th)); }
+sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3)); const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xffffff, size: 2, sizeAttenuation: false, fog: false })); scene.add(stars);
+const pmrem = new THREE.PMREMGenerator(renderer);
+const bgBIM = gradientTex('#e8eef5', '#b9c6d6'), bgBlue = gradientTex('#071a33', '#0b2a4a'), bgNight = gradientTex('#02050c', '#0d1a33');
+const grid = new THREE.GridHelper(1600, 80, 0x2f6ea8, 0x173a5e); grid.position.set(CEN.x, GY + .02, CEN.z); grid.visible = false; scene.add(grid);
+
+/* =====================================================================================
+   BUILD PROJECT
+   ===================================================================================== */
+api.controls = controls;
+buildProject(api);
+// night floodlights around the permanent works (project may override with PROJECT.floodlights = [[x,y,z,tx,ty,tz], …])
+const spots = []; { const bb = new THREE.Box3(); ELS.filter(e => !e.temp).forEach(e => bb.union(e.box)); const c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3()), r = Math.max(sz.x, sz.z) * .7 + 20;
+  const list = PROJECT.floodlights || [[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) => [c.x + a * r, GY + 2, c.z + b * r, c.x, c.y, c.z]);
+  list.forEach(([x, y, z, a, b, d]) => { const l = new THREE.SpotLight(0xffd8a0, 0, r * 3, .5, .6, 1.2); l.position.set(x, y, z); l.target.position.set(a, b, d); scene.add(l, l.target); spots.push(l); }); api.spots = spots; }
+const STRUCT_DONE = ELS.filter(e => (PROJECT.structuralCats || []).includes(e.cat)).reduce((m, e) => Math.max(m, e.finish), 0);
+if (PROJECT.archAfterStructure && STRUCT_DONE) ELS.filter(e => ['arch', 'deco', 'facade', 'sculpture'].includes(e.cat)).forEach(e => { if (e.start <= STRUCT_DONE) { const d = STRUCT_DONE + DAY - e.start; e.start += d; e.finish += d; e.src += L2(' · เริ่มหลังโครงสร้างแล้วเสร็จ', ' · after structural completion'); } });
+const STEPS = PROJECT.steps.map(s => { const d = typeof s.d === 'function' ? s.d(Object.fromEntries(Object.keys(SDATES).map(k => [k, SDATES[k]]))) : s.d; return { d, dw: s.dw || '—', t: tx(s.t), b: (s.b || []).map(tx), t0: typeof d === 'number' ? d : D(d) }; }).sort((a, b) => a.t0 - b.t0);
+
+/* =====================================================================================
+   4D STATE
+   ===================================================================================== */
+let MODE = 'real', NOW = (q => q && q.includes('T') ? new Date(q).getTime() : D(q || PROJECT.initialDate || PROJECT.T0))(QS.get('date'));
+function stateOf(e, t) { if (e.temp) { if (t < e.start) return 'plan'; if (t < e.finish) return 'wip'; if (e.rmE && t >= e.rmE) return 'gone'; if (e.rmS && t >= e.rmS) return 'rm'; return 'done'; } return t < e.start ? 'plan' : t < e.finish ? 'wip' : 'done'; }
+function setMat(e, mat) { e.obj.traverse(m => { if (m.isMesh) m.material = mat === 'base' ? m.userData.base : mat; }); }
+function ensureEdges(e) { if (e.edges) return; e.edges = []; e.obj.traverse(m => { if (m.isMesh && !m.isInstancedMesh && m.geometry.attributes.position.count < 60000) { const ln = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry, 28), LM.done); ln.visible = false; m.add(ln); e.edges.push(ln); } }); }
+const catMats = {}, catMat = c => catMats[c] || (catMats[c] = new THREE.MeshLambertMaterial({ color: CATS[c]?.c || '#ccc' }));
+const NO_WIP_TINT = ['finish', 'elec', 'mep', 'water', 'drain', 'arch', 'deco', 'facade', 'sculpture'];
+function applyLook(e, t) {
+  const st = stateOf(e, t); e.st = st; const phase = e.kind === 'cast' && st === 'wip' ? (t < e.cast ? 'rebar' : 'fresh') : '';
+  if (e.kind === 'grow') e.obj.scale.y = st === 'wip' ? clamp((t - e.start) / (e.finish - e.start), .02, 1) : 1;
+  const key = MODE + st + phase + (catHidden[e.cat] ? 'h' : ''); if (e.lookKey === key) return; e.lookKey = key;
+  if (e.edges) e.edges.forEach(l => l.visible = false);
+  if (catHidden[e.cat] || st === 'gone') { e.obj.visible = false; return; }
+  if (MODE === 'real') { if (st === 'plan') { e.obj.visible = false; return; } e.obj.visible = true;
+    if (st === 'wip' && !e.temp && !NO_WIP_TINT.includes(e.cat)) setMat(e, e.kind === 'cast' ? (phase === 'rebar' ? M.rebar : M.fresh) : e.kind === 'cable' ? M.cableWip : e.kind === 'grow' ? 'base' : M.wip); else setMat(e, 'base');
+  } else if (MODE === 'bim') { e.obj.visible = true; setMat(e, st === 'plan' ? M.ghost : e.temp ? M.bimTemp : st === 'wip' ? M.bimWip : catMat(e.cat)); }
+  else { if (st === 'plan' && e.temp) { e.obj.visible = false; return; } e.obj.visible = true; ensureEdges(e); setMat(e, M.blueFill); e.edges.forEach(l => { l.visible = true; l.material = st === 'plan' ? LM.plan : e.temp ? LM.temp : st === 'wip' ? LM.wip : LM.done; }); }
+}
+let playing = false;
+function updateCranes(dt) { for (const e of ELS) if (e.kind === 'crane' && e.obj.visible && e.obj.userData.slew) { if (playing || tour.on) e.obj.userData.slew.rotation.y += dt * .05; else if (!e.rotInit) { e.obj.userData.slew.rotation.y = R() * 6; e.rotInit = true; } } }
+function refresh() { for (const e of ELS) applyLook(e, NOW); updateProject(api, NOW, 0); applyLabels(); updateUI(); }
+
+/* =====================================================================================
+   THEMES
+   ===================================================================================== */
+let theme = 'day', isNight = false;
+function setSun(el, az) { const v = new THREE.Vector3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - el), THREE.MathUtils.degToRad(az)); sky.material.uniforms.sunPosition.value.copy(v); if (water) water.material.uniforms.sunDirection.value.copy(v).normalize(); sun.position.copy(v).multiplyScalar(700).add(sun.target.position); return v; }
+function envFromSky() { const sc = new THREE.Scene(), sk = new Sky(); sk.scale.setScalar(1000); sk.material.uniforms.sunPosition.value.copy(sky.material.uniforms.sunPosition.value); ['turbidity', 'rayleigh', 'mieCoefficient', 'mieDirectionalG'].forEach(k => sk.material.uniforms[k].value = sky.material.uniforms[k].value); sc.add(sk); if (scene.environment) scene.environment.dispose(); scene.environment = pmrem.fromScene(sc).texture; }
+function applyTheme(t) {
+  theme = t; isNight = t === 'night'; MODE = t === 'bim' ? 'bim' : t === 'blue' ? 'blue' : 'real'; const real = MODE === 'real';
+  document.body.dataset.ui = t === 'bim' ? 'light' : 'dark'; document.querySelectorAll('#themes button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  sky.visible = real && !isNight; stars.visible = isNight; if (water) { water.visible = real; flatWater.visible = !real; }
+  city.visible = MODE !== 'blue'; trees.visible = real; cars.visible = real; groundMeshes.forEach(g => g.visible = MODE !== 'blue'); grid.visible = MODE === 'blue';
+  gCtx.children.forEach(o => { if (o.userData.bank || o.userData.ctx) o.visible = MODE !== 'blue'; });
+  bldMat.emissiveIntensity = isNight ? 1.1 : 0; bldMat.map = MODE === 'bim' ? null : winDay; bldMat.color.set(MODE === 'bim' ? 0xf1f3f5 : 0xffffff); bldMat.transparent = MODE === 'bim'; bldMat.opacity = MODE === 'bim' ? .55 : 1; bldMat.needsUpdate = true;
+  groundMat.color.set(MODE === 'bim' ? 0xdfe6ee : 0xffffff); groundMat.map = MODE === 'bim' ? null : tGrass; groundMat.needsUpdate = true;
+  M.lampHead.emissive.set(isNight ? 0xffe9a8 : 0); M.lampHead.emissiveIntensity = 3; M.avi.emissive.set(isNight ? 0xff2020 : 0x330000); M.avi.emissiveIntensity = 4;
+  M.cable.emissive.set(isNight ? 0x6b5a36 : 0); M.gold.emissive.set(isNight ? 0x7a5200 : 0);
+  spots.forEach(l => l.intensity = isNight ? (PROJECT.floodIntensity || 350) : 0);
+  bloom.enabled = isNight || MODE === 'blue'; bloom.strength = isNight ? .55 : .45; bloom.threshold = isNight ? .9 : .8;
+  if (water) water.material.uniforms.sunColor.value.set({ day: 0x8c8676, sunset: 0xffa060, night: 0x1a2030 }[t] || 0x888888);
+  const u = sky.material.uniforms;
+  if (t === 'day') { u.turbidity.value = 5; u.rayleigh.value = 1.2; u.mieCoefficient.value = .004; u.mieDirectionalG.value = .8; setSun(48, 140); renderer.toneMappingExposure = .5; sun.color.set(0xfff5e6); sun.intensity = 2.6; hemi.intensity = .55; hemi.color.set(0xdfefff); scene.fog = new THREE.Fog(0xc6d4de, 900, 3600); scene.background = null; envFromSky(); }
+  if (t === 'sunset') { u.turbidity.value = 9; u.rayleigh.value = 2.6; u.mieCoefficient.value = .009; u.mieDirectionalG.value = .9; setSun(4.5, 248); renderer.toneMappingExposure = .45; sun.color.set(0xffb070); sun.intensity = 2.2; hemi.intensity = .35; hemi.color.set(0xffd2b0); scene.fog = new THREE.Fog(0xcf9a76, 700, 3200); scene.background = null; envFromSky(); }
+  if (t === 'night') { setSun(-20, 250); const mv = new THREE.Vector3(-.3, .8, .4).normalize(); sun.position.copy(mv).multiplyScalar(700).add(sun.target.position); if (water) water.material.uniforms.sunDirection.value.copy(mv); renderer.toneMappingExposure = .95; sun.color.set(0x8fa8ff); sun.intensity = .25; hemi.intensity = .3; hemi.color.set(0x7088c0); scene.fog = new THREE.Fog(0x0a1222, 400, 2600); scene.background = bgNight; scene.environment = null; }
+  if (t === 'bim') { renderer.toneMappingExposure = 1; sun.color.set(0xffffff); sun.intensity = 1.8; setSun(55, 130); hemi.intensity = 1; hemi.color.set(0xffffff); scene.fog = null; scene.background = bgBIM; scene.environment = null; }
+  if (t === 'blue') { renderer.toneMappingExposure = 1; sun.intensity = .6; hemi.intensity = .6; scene.fog = null; scene.background = bgBlue; scene.environment = null; }
+  if (bed) bed.material.color.set(real ? 0x4a4436 : MODE === 'bim' ? 0xa5b7c8 : 0x0b2a4a);
+  for (const e of ELS) e.lookKey = null; refresh(); updateUrl();
+}
+
+/* =====================================================================================
+   SOUNDSCAPE (procedural Web Audio – no audio files)
+   ===================================================================================== */
+class Sound {
+  constructor() { this.on = false; this.music = false; this.next = { clank: 0, bird: 0, beep: 0, horn: 0, note: 0, pump: 0 }; }
+  init() { const c = this.ctx = new (window.AudioContext || window.webkitAudioContext)(); this.master = c.createGain(); this.master.gain.value = 0; this.master.connect(c.destination);
+    this.verb = c.createConvolver(); this.verb.buffer = this.impulse(3); const vg = c.createGain(); vg.gain.value = .4; this.verb.connect(vg).connect(this.master);
+    const brown = this.noise('brown'), pink = this.noise('pink'), white = this.noise('white');
+    this.river = this.loop(brown, 'lowpass', 420, 0); const lfo = c.createOscillator(), lg = c.createGain(); lfo.frequency.value = .09; lg.gain.value = 160; lfo.connect(lg).connect(this.river.f.frequency); lfo.start();
+    this.wind = this.loop(pink, 'bandpass', 700, 0, .6); const l2 = c.createOscillator(), g2 = c.createGain(); l2.frequency.value = .05; g2.gain.value = 350; l2.connect(g2).connect(this.wind.f.frequency); l2.start();
+    this.city = this.loop(brown, 'lowpass', 160, 0);
+    this.gen = c.createGain(); this.gen.gain.value = 0; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 220; lp.connect(this.gen).connect(this.master);
+    [49, 98.5, 147].forEach((f, i) => { const o = c.createOscillator(); o.type = i ? 'square' : 'sawtooth'; o.frequency.value = f; const g = c.createGain(); g.gain.value = i ? .08 : .35; o.connect(g).connect(lp); o.start(); });
+    this.crk = c.createGain(); this.crk.gain.value = 0; const co = c.createOscillator(); co.frequency.value = 4300; const am = c.createGain(); am.gain.value = 0; const ao = c.createOscillator(); ao.type = 'square'; ao.frequency.value = 28; const ag = c.createGain(); ag.gain.value = .5; ao.connect(ag).connect(am.gain); co.connect(am).connect(this.crk).connect(this.master); co.start(); ao.start();
+    this.drn = c.createGain(); this.drn.gain.value = 0; const dbp = c.createBiquadFilter(); dbp.type = 'bandpass'; dbp.frequency.value = 520; dbp.Q.value = .7; dbp.connect(this.drn).connect(this.master);
+    this.drnOsc = [168, 171, 252].map(f => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; const g = c.createGain(); g.gain.value = .25; o.connect(g).connect(dbp); o.start(); return o; });
+    this.pad = c.createGain(); this.pad.gain.value = 0; this.pad.connect(this.verb); this.pad.connect(this.master);
+    this.padOsc = [130.81, 196.0, 261.6].map(f => { const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = f; const g = c.createGain(); g.gain.value = .12; o.connect(g).connect(this.pad); o.start(); return o; }); }
+  noise(type) { const c = this.ctx, n = c.sampleRate * 4, b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0); let last = 0, b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+    for (let i = 0; i < n; i++) { const w = Math.random() * 2 - 1; if (type === 'white') d[i] = w * .4; else if (type === 'brown') { last = (last + .02 * w) / 1.02; d[i] = last * 3.5; } else { b0 = .99886 * b0 + w * .0555179; b1 = .99332 * b1 + w * .0750759; b2 = .969 * b2 + w * .153852; b3 = .8665 * b3 + w * .3104856; b4 = .55 * b4 + w * .5329522; b5 = -.7616 * b5 - w * .016898; d[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * .5362) * .11; b6 = w * .115926; } } return b; }
+  impulse(sec) { const c = this.ctx, n = c.sampleRate * sec, b = c.createBuffer(2, n, c.sampleRate); for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.5); } return b; }
+  loop(buf, type, f, gain, q = .7) { const c = this.ctx, s = c.createBufferSource(); s.buffer = buf; s.loop = true; const fl = c.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q; const g = c.createGain(); g.gain.value = gain; s.connect(fl).connect(g).connect(this.master); s.start(); return { s, f: fl, g }; }
+  env(node, t, a, peak, d) { node.gain.setValueAtTime(.0001, t); node.gain.exponentialRampToValueAtTime(peak, t + a); node.gain.exponentialRampToValueAtTime(.0001, t + a + d); }
+  clank(v) { const c = this.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain(); o.type = 'triangle'; o.frequency.value = 700 + Math.random() * 900; o.connect(g); g.connect(this.master); g.connect(this.verb); this.env(g, t, .002, .25 * v, .35); o.start(t); o.stop(t + .5); }
+  thump(v) { const c = this.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(40, t + .2); o.connect(g).connect(this.master); this.env(g, t, .005, .5 * v, .25); o.start(t); o.stop(t + .35); }
+  beep(v) { const c = this.ctx; for (let i = 0; i < 3; i++) { const t = c.currentTime + i * .35, o = c.createOscillator(), g = c.createGain(); o.type = 'square'; o.frequency.value = 1250; o.connect(g).connect(this.master); this.env(g, t, .01, .05 * v, .18); o.start(t); o.stop(t + .25); } }
+  bird(v) { const c = this.ctx, n = 2 + Math.random() * 4 | 0, base = 2600 + Math.random() * 1800; for (let i = 0; i < n; i++) { const t = c.currentTime + i * .13, o = c.createOscillator(), g = c.createGain(); o.frequency.setValueAtTime(base, t); o.frequency.exponentialRampToValueAtTime(base * 1.45, t + .05); o.frequency.exponentialRampToValueAtTime(base * .9, t + .1); o.connect(g); g.connect(this.master); this.env(g, t, .01, .06 * v, .09); o.start(t); o.stop(t + .14); } }
+  horn(v) { const c = this.ctx, t = c.currentTime, g = c.createGain(), f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 700; f.connect(g); g.connect(this.master); [110, 138.6].forEach(fr => { const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = fr; o.connect(f); o.start(t); o.stop(t + 2); }); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.12 * v, t + .15); g.gain.setValueAtTime(.12 * v, t + 1.5); g.gain.linearRampToValueAtTime(.0001, t + 1.9); }
+  pluck(freq, v) { const c = this.ctx, t = c.currentTime + .02, g = c.createGain(); g.connect(this.master); g.connect(this.verb); [[1, 'triangle', .5], [2, 'sine', .25], [3.01, 'sine', .1]].forEach(([m, ty, a]) => { const o = c.createOscillator(); o.type = ty; o.frequency.value = freq * m; const og = c.createGain(); og.gain.value = a; o.connect(og).connect(g); o.start(t); o.stop(t + 2.2); }); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.18 * v, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + 2); }
+  set(on) { if (!this.ctx) this.init(); this.on = on; if (on) this.ctx.resume(); this.master.gain.setTargetAtTime(on ? .9 : 0, this.ctx.currentTime, .3); }
+  update(dt, s) { if (!this.ctx || !this.on) return; const now = this.ctx.currentTime, k = .4, near = clamp(1 - s.dist / 900, 0, 1), alt = clamp(s.alt / 150, 0, 1);
+    this.river.g.gain.setTargetAtTime(s.water && s.real ? .55 * clamp(1 - s.alt / 260, .15, 1) : 0, now, k); this.wind.g.gain.setTargetAtTime(.05 + .35 * alt + (s.drone ? .1 : 0), now, k);
+    this.city.g.gain.setTargetAtTime(.25 + (s.opened ? .25 : 0), now, k); const act = s.active ? near : 0; this.gen.gain.setTargetAtTime(.1 * act, now, k);
+    this.crk.gain.setTargetAtTime(s.night ? .022 : 0, now, 1); this.drn.gain.setTargetAtTime(s.drone ? .16 : 0, now, .2); this.drnOsc.forEach((o, i) => o.frequency.setTargetAtTime([168, 171, 252][i] * (1 + clamp(s.speed / 120, 0, .6)), now, .3));
+    this.pad.gain.setTargetAtTime(this.music ? .05 : 0, now, 1.5);
+    if (act > .05 && now > this.next.clank) { this.clank(act); this.next.clank = now + .25 + Math.random() * 1.6 / (.4 + act); }
+    if (s.casting && act > .05 && now > this.next.pump) { this.thump(act); this.next.pump = now + .62; }
+    if (act > .05 && now > this.next.beep) { this.beep(act); this.next.beep = now + 9 + Math.random() * 14; }
+    if (!s.night && s.real && now > this.next.bird) { this.bird(.8 + Math.random() * .4); this.next.bird = now + 2 + Math.random() * 7; }
+    if (s.real && now > this.next.horn) { if (this.next.horn) this.horn(.8); this.next.horn = now + 25 + Math.random() * 40; }
+    if (this.music && now > this.next.note) { const sc = [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33, 659.26]; this.mi = clamp((this.mi ?? 3) + (Math.random() * 5 | 0) - 2, 0, 7); this.pluck(sc[this.mi], 1); if (Math.random() < .3) this.pluck(sc[clamp(this.mi - 2, 0, 7)] / 2, .7); this.next.note = now + [.42, .42, .84, .21][Math.random() * 4 | 0]; } }
+}
+const snd = new Sound();
+
+/* =====================================================================================
+   CAMERA PRESETS, DRONE TOUR, FLY MODE
+   ===================================================================================== */
+const VIEWS = {}; for (const [k, v] of Object.entries(PROJECT.views)) VIEWS[k] = [v.pos, v.target];
+const $ = id => document.getElementById(id);
+$('view').innerHTML = Object.entries(PROJECT.views).map(([k, v]) => `<option value="${k}">${tx(v.t)}</option>`).join('');
+let camAnim = null;
+function goView(name, dur = 1.6) { const v = VIEWS[name]; if (v) camAnim = { p0: camera.position.clone(), t0: controls.target.clone(), p1: new THREE.Vector3(...v[0]), t1: new THREE.Vector3(...v[1]), u: 0, dur }; }
+const TOUR = PROJECT.tour.map(w => [w.pos, w.target, tx(w.t), tx(w.s)]);
+const tour = { on: false, u: 0, dur: Math.max(40, TOUR.length * 9), posC: new THREE.CatmullRomCurve3(TOUR.map(w => new THREE.Vector3(...w[0])), false, 'centripetal'), tgtC: new THREE.CatmullRomCurve3(TOUR.map(w => new THREE.Vector3(...w[1])), false, 'centripetal'), bat: 100, last: new THREE.Vector3(), idx: -1 };
+const fly = { on: false, keys: {}, yaw: 0, pitch: 0, drag: null };
+const capEl = $('caption'), hud = $('hud');
+function startTour() { stopFly(); tour.on = true; tour.u = 0; tour.idx = -1; tour.bat = 100; controls.enabled = false; hud.style.display = 'block'; document.body.classList.add('noui'); $('btnTour').classList.add('on'); if (!snd.on) toggleSound(true); }
+function stopTour() { if (!tour.on) return; tour.on = false; controls.enabled = true; hud.style.display = 'none'; capEl.style.display = 'none'; document.body.classList.remove('noui'); $('btnTour').classList.remove('on'); controls.target.copy(tour.tgtC.getPoint(Math.min(tour.u, .999))); }
+function startFly() { stopTour(); fly.on = true; controls.enabled = false; const d = new THREE.Vector3(); camera.getWorldDirection(d); fly.yaw = Math.atan2(-d.x, -d.z); fly.pitch = Math.asin(d.y); hud.style.display = 'block'; $('flyhelp').style.display = 'block'; $('btnFly').classList.add('on'); if (!snd.on) toggleSound(true); }
+function stopFly() { if (!fly.on) return; fly.on = false; controls.enabled = true; hud.style.display = 'none'; $('flyhelp').style.display = 'none'; $('btnFly').classList.remove('on'); const d = new THREE.Vector3(); camera.getWorldDirection(d); controls.target.copy(camera.position).addScaledVector(d, 60); }
+const isField = e => e.target.closest && e.target.closest('input,select,textarea');
+addEventListener('keydown', e => { fly.keys[e.code] = true; if (e.code === 'Escape') { stopTour(); stopFly(); } if (isField(e)) return;
+  if (e.code === 'KeyH') document.body.classList.toggle('noui'); if (e.code === 'Space' && !fly.on) { e.preventDefault(); togglePlay(); }
+  if (e.code === 'KeyL' && !fly.on) setAllLabels(!LBL.all); if (e.key === '[') $('btnL').click(); if (e.key === ']') $('btnR').click(); });
+addEventListener('keyup', e => { fly.keys[e.code] = false; });
+canvas.addEventListener('pointerdown', e => { if (fly.on) fly.drag = [e.clientX, e.clientY]; });
+addEventListener('pointerup', () => fly.drag = null);
+addEventListener('pointermove', e => { if (fly.on && fly.drag) { fly.yaw -= (e.clientX - fly.drag[0]) * .004; fly.pitch = clamp(fly.pitch - (e.clientY - fly.drag[1]) * .004, -1.4, 1.4); fly.drag = [e.clientX, e.clientY]; } });
+function hudUpdate(spd) { const p = camera.position, g = PROJECT.geo || { lat: 0, lon: 0 }, lat = g.lat + (-p.z) / 111000, lon = g.lon + p.x / (111000 * Math.cos(g.lat * Math.PI / 180));
+  $('hudL').innerHTML = `<span class="rec">● REC</span> 4K 30fps<br>ALT ${(p.y - GY).toFixed(1)} m<br>H.S ${(spd * 3.6).toFixed(1)} km/h<br>D ${p.distanceTo(CEN).toFixed(0)} m`;
+  $('hudR').innerHTML = `BAT ${tour.bat.toFixed(0)}%<br>GPS ▮▮▮▮ 18<br>${lat.toFixed(5)}°N<br>${lon.toFixed(5)}°E (approx.)`; $('hudB').innerHTML = `4D ${fmtDate(NOW)} · ${$('stepName').textContent}`; }
+
+/* =====================================================================================
+   UI – timeline, tabs, KPIs, schedule import, labels, panels, picking
+   ===================================================================================== */
+const slider = $('slider'), t2v = t => (t - T0) / (T1 - T0) * 1000, v2t = v => T0 + v / 1000 * (T1 - T0);
+(function ticks() { const tk = $('ticks'), months = (T1 - T0) / (30 * DAY), step = months > 30 ? 12 : months > 12 ? 6 : 3; const s = new Date(T0); s.setDate(1);
+  for (let d = new Date(s.getFullYear(), Math.ceil(s.getMonth() / step) * step, 1); d.getTime() <= T1; d.setMonth(d.getMonth() + step)) { if (d.getTime() < T0) continue; const e = document.createElement('div'); e.style.left = t2v(d.getTime()) / 10 + '%'; e.textContent = d.toLocaleDateString(LANG === 'en' ? 'en-GB' : 'th-TH', { month: 'short', year: LANG === 'en' ? 'numeric' : '2-digit' }); tk.appendChild(e); }
+  (PROJECT.milestones || []).forEach(([d, n]) => { const e = document.createElement('div'); e.className = 'ms'; e.style.left = t2v(D(typeof d === 'function' ? d(SDATES) : d)) / 10 + '%'; e.textContent = '◆ ' + tx(n); tk.appendChild(e); }); })();
+function setNow(t, fromSlider) { NOW = clamp(t, T0, T1); if (!fromSlider) slider.value = t2v(NOW); refresh(); }
+slider.addEventListener('input', () => setNow(v2t(+slider.value), true));
+function togglePlay() { playing = !playing; if (playing && NOW >= T1 - DAY) setNow(T0); $('btnPlay').textContent = tx(playing ? UI.pause : UI.play); $('btnPlay').classList.toggle('on', playing); }
+$('btnPlay').textContent = tx(UI.play); $('btnPlay').onclick = togglePlay;
+document.querySelectorAll('#themes button').forEach(b => b.onclick = () => applyTheme(b.dataset.t));
+$('view').onchange = e => goView(e.target.value);
+$('btnTour').onclick = () => tour.on ? stopTour() : startTour(); $('btnFly').onclick = () => fly.on ? stopFly() : startFly();
+function toggleSound(force) { const on = force ?? !snd.on; snd.set(on); $('btnSound').innerHTML = (on ? '🔊' : '🔇') + `<span class="lbl"> ${L2('เสียง', 'Sound')}</span>`; $('btnSound').classList.toggle('on', on); }
+$('btnSound').onclick = () => toggleSound(); $('btnMusic').onclick = () => { if (!snd.on) toggleSound(true); snd.music = !snd.music; $('btnMusic').classList.toggle('on', snd.music); };
+$('btnUI').onclick = () => document.body.classList.toggle('noui'); $('mobileToggle').onclick = () => $('left').classList.toggle('show');
+document.querySelectorAll('#langSeg button').forEach(b => { b.classList.toggle('on', b.dataset.l === LANG); b.onclick = () => { if (b.dataset.l === LANG) return; store.set('lang', b.dataset.l); const u = new URL(location.href); u.searchParams.set('lang', b.dataset.l); u.searchParams.set('date', fmtISO(NOW)); u.searchParams.set('theme', theme); location.href = u.toString(); }; });
+// labels
+function setAllLabels(v) { LBL.all = v; saveLBL(); applyLabels(); if (tab === 'model') renderTab(); }
+$('btnLbl').onclick = () => setAllLabels(!LBL.all);
+// panels
+function setPanel(side, show) { document.body.classList.toggle(side === 'L' ? 'hideL' : 'hideR', !show); $('btn' + side).classList.toggle('on', show); const u = store.get('ui', {}); u[side] = show; store.set('ui', u); }
+$('btnL').onclick = () => setPanel('L', document.body.classList.contains('hideL')); $('btnR').onclick = () => setPanel('R', document.body.classList.contains('hideR'));
+$('closeL').onclick = () => setPanel('L', false); $('closeR').onclick = () => setPanel('R', false);
+{ const u = store.get('ui', {}); if (u.L === false) setPanel('L', false); if (u.R === false) setPanel('R', false); } if (QS.get('panels') === '0') { setPanel('L', false); setPanel('R', false); }
+// screenshot / GLB
+$('btnShot').onclick = () => { composer.render(); const a = document.createElement('a'); a.href = renderer.domElement.toDataURL('image/png'); a.download = `${PROJECT.id}_4D_${fmtISO(NOW)}_${theme}.png`; a.click(); };
+$('btnGlb').onclick = () => { const root = new THREE.Group(); root.name = PROJECT.id + '_' + fmtISO(NOW);
+  for (const e of ELS) if (e.obj.visible && !e.temp) { const saved = []; e.obj.traverse(m => { saved.push([m, m.userData]); m.userData = {}; }); const c = e.obj.clone(true); saved.forEach(([m, u]) => m.userData = u);
+    const orig = []; e.obj.traverse(m => { if (m.isMesh) orig.push(m); }); let i = 0; const drop = []; c.traverse(m => { if (m.isMesh) { const o = orig[i++]; m.material = (o && o.userData.base) || m.material; } if (m.isLineSegments) drop.push(m); }); drop.forEach(m => m.removeFromParent());
+    c.name = e.id; c.userData = { id: e.id, name: e.name, category: CATS[e.cat]?.th, start: fmtISO(e.start), finish: fmtISO(e.finish), drawing: e.dwg, source: e.src }; root.add(c); }
+  new GLTFExporter().parse(root, glb => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' })); a.download = `${PROJECT.id}_BIM_${fmtISO(NOW)}.glb`; a.click(); }, err => alert(err), { binary: true }); };
+
+/* ---- schedule import (PDF printed from MS Project / MS Project XML / CSV / JSON) ---- */
+const SCHED_IO = (() => {
+  const MON = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+  function parseDate(s) { if (!s) return null; s = String(s).trim(); let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+    m = s.match(/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if (m) { const y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; const us = PROJECT.schedule.dateOrder !== 'dmy'; const mo = us ? m[1] : m[2], da = us ? m[2] : m[1]; return `${y}-${String(mo).padStart(2, '0')}-${String(da).padStart(2, '0')}`; }
+    m = s.match(/(\d{1,2})[-\s]([A-Z][a-z]{2})[-\s](\d{2,4})/); if (m && MON[m[2]] !== undefined) { const y = m[3].length === 2 ? 2000 + +m[3] : +m[3]; return `${y}-${String(MON[m[2]] + 1).padStart(2, '0')}-${String(m[1]).padStart(2, '0')}`; } return null; }
+  async function fromPDF(buf, progress) { const doc = await window.pdfjsLib.getDocument({ data: buf }).promise, toks = []; for (let p = 1; p <= doc.numPages; p++) { const tc = await (await doc.getPage(p)).getTextContent(); tc.items.forEach(i => { const s = i.str.trim(); if (s) toks.push(s); }); if (progress) progress(p / doc.numPages); } return fromTokens(toks); }
+  function fromTokens(toks) { const dur = /^\d+(\.\d+)?\s*e?(days?|d|wks?|w|hrs?|h|mons?|mo|วัน)\??$/i, dt = /(\d{1,2}\/\d{1,2}\/\d{2,4})/, tasks = new Map();
+    for (let i = 0; i < toks.length - 4; i++) { if (!/^\d{1,5}$/.test(toks[i])) continue; let j = i + 1, name = toks[j]; if (!name || /^\d+([,.]\d+)*$/.test(name) || dt.test(name) || dur.test(name)) continue; j++;
+      if (!dur.test(toks[j]) && toks[j + 1] && dur.test(toks[j + 1]) && !dt.test(toks[j])) { name += ' ' + toks[j]; j++; } if (!dur.test(toks[j])) continue;
+      const s = (toks[j + 1] || '').match(dt), f = (toks[j + 2] || '').match(dt); if (!s || !f) continue; const id = +toks[i]; if (!tasks.has(id)) tasks.set(id, { id, name: name.trim(), start: parseDate(s[1]), finish: parseDate(f[1]) }); i = j + 2; }
+    return [...tasks.values()].sort((a, b) => a.id - b.id); }
+  function fromXML(text) { const x = new DOMParser().parseFromString(text, 'application/xml'), out = []; x.querySelectorAll('Tasks > Task').forEach(t => { const g = n => t.querySelector(':scope > ' + n)?.textContent; if (!g('Name')) return; out.push({ id: +g('ID'), name: g('Name'), start: parseDate(g('Start')), finish: parseDate(g('Finish')), level: +g('OutlineLevel') }); }); return out.sort((a, b) => a.id - b.id); }
+  function fromCSV(text) { const sep = (text.split(/\r?\n/)[0].match(/[;\t]/) || [','])[0];
+    const splitRow = r => { const out = []; let cur = '', q = false; for (let i = 0; i < r.length; i++) { const c = r[i]; if (q) { if (c === '"' && r[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; } else if (c === '"') q = true; else if (c === sep) { out.push(cur.trim()); cur = ''; } else cur += c; } out.push(cur.trim()); return out; };
+    const rows = text.replace(/^﻿/, '').split(/\r?\n/).filter(r => r.trim()).map(splitRow), h = rows[0].map(c => c.toLowerCase()), ci = k => h.findIndex(c => k.some(x => c.includes(x)));
+    const iI = ci(['id']), iN = ci(['task name', 'name', 'ชื่อ']), iS = ci(['start', 'เริ่ม']), iF = ci(['finish', 'end', 'เสร็จ']);
+    return rows.slice(1).map((r, n) => ({ id: iI >= 0 ? +r[iI] || n + 1 : n + 1, name: r[iN], start: parseDate(r[iS]), finish: parseDate(r[iF]) })).filter(t => t.name && t.start && t.finish); }
+  function toSchedule(tasks) {   // generic: section rules set context, key rules map task → schedule key
+    const S = { dates: {}, matched: 0, tasks: tasks.length }, ctx = {};
+    for (const t of tasks) { const n = t.name.replace(/\s+/g, ' ').trim(); let m;
+      for (const sr of PROJECT.schedule.sections || []) if ((m = n.match(sr.re))) Object.assign(ctx, sr.set(m, t));
+      for (const r of PROJECT.schedule.rules || []) if ((m = n.match(r.re))) { const k = r.key(m, ctx, t); if (k) { if (r.mode === 'finish') S.dates[k] = [t.finish, t.finish]; else S.dates[k] = [t.start, t.finish]; S.matched++; } break; } }
+    return S; }
+  return { fromPDF, fromTokens, fromXML, fromCSV, toSchedule, parseDate };
+})();
+$('schedSrc').textContent = L2('แผนงาน: ', 'Programme: ') + (SCHED.user ? SCHED.source + L2(' (อัปโหลด ', ' (uploaded ') + (SCHED.imported || '') + ')' : SCHED.source + L2(' – ค่าเริ่มต้น', ' – default'));
+let pendingSched = null; const openModal = v => { $('modal').style.display = $('modalBack').style.display = v ? 'block' : 'none'; };
+$('btnImport').onclick = () => { openModal(true); $('impStatus').textContent = ''; $('mApply').disabled = true; pendingSched = null; };
+$('mClose').onclick = $('modalBack').onclick = () => openModal(false); $('drop').onclick = () => $('impFile').click();
+['dragover', 'dragenter'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => $('drop').addEventListener(ev, e => { e.preventDefault(); $('drop').classList.remove('over'); }));
+$('drop').addEventListener('drop', e => { if (e.dataTransfer.files[0]) importFile(e.dataTransfer.files[0]); }); $('impFile').onchange = e => { if (e.target.files[0]) importFile(e.target.files[0]); e.target.value = ''; };
+async function loadPdfJs() { if (window.pdfjsLib) return; await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js'; sc.onload = res; sc.onerror = () => rej(new Error(L2('โหลด pdf.js ไม่สำเร็จ (ต้องเชื่อมต่ออินเทอร์เน็ต)', 'Could not load pdf.js (internet required)'))); document.head.appendChild(sc); }); window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
+async function importFile(f) {
+  const st = $('impStatus'), ext = f.name.split('.').pop().toLowerCase(); pendingSched = null; $('mApply').disabled = true; st.innerHTML = `${L2('กำลังอ่าน', 'Reading')} <b>${f.name}</b> …`;
+  try { let tasks, S;
+    if (ext === 'mpp') { st.innerHTML = L2('<span class="bad">ไฟล์ .mpp เบราว์เซอร์อ่านโดยตรงไม่ได้</span>\nMS Project ▸ Save As ▸ XML หรือ Print ▸ PDF แล้วอัปโหลด หรือใช้ tools/mpp2json.py', '<span class="bad">Browsers cannot read .mpp directly.</span>\nMS Project ▸ Save As ▸ XML or Print ▸ PDF and upload that, or use tools/mpp2json.py'); return; }
+    if (ext === 'pdf') { await loadPdfJs(); tasks = await SCHED_IO.fromPDF(new Uint8Array(await f.arrayBuffer()), p => st.innerHTML = `PDF … ${(p * 100).toFixed(0)}%`); }
+    else if (ext === 'xml') tasks = SCHED_IO.fromXML(await f.text()); else if (ext === 'csv' || ext === 'txt') tasks = SCHED_IO.fromCSV(await f.text());
+    else if (ext === 'json') { const j = JSON.parse(await f.text()); if (j.dates) S = j; else tasks = j.tasks || j; } else throw new Error(L2('ไม่รองรับไฟล์ .', 'Unsupported file .') + ext);
+    if (!S) S = SCHED_IO.toSchedule(tasks); S.source = ext === 'json' && S.source ? S.source : f.name; S.imported = fmtISO(Date.now());
+    const keys = Object.keys(PROJECT.schedule.dates), known = keys.filter(k => S.dates[k]).length, changed = keys.filter(k => S.dates[k] && (S.dates[k][0] !== PROJECT.schedule.dates[k][0] || S.dates[k][1] !== PROJECT.schedule.dates[k][1]));
+    if (!known) throw new Error(L2('ไม่พบงานที่ตรงกับแบบจำลองในไฟล์นี้ – ตรวจสอบชื่องาน (schedule.rules)', 'No tasks matched the model – check task names against schedule.rules'));
+    st.innerHTML = `<span class="ok">✔ ${L2('อ่านได้', 'Read')} ${S.tasks ?? '—'} tasks · ${L2('จับคู่กับแบบจำลอง', 'matched')} ${known}/${keys.length}</span>\n${L2('วันที่เปลี่ยนจากแผนเดิม', 'Dates changed')}: ${changed.length}${changed.length ? ' (' + changed.slice(0, 10).join(', ') + (changed.length > 10 ? ' …' : '') + ')' : ''}` + (known < keys.length ? `\n<span class="bad">${L2('รายการที่ไม่พบในไฟล์จะใช้วันที่เดิม', 'Keys missing from the file keep their default dates')}</span>` : '');
+    pendingSched = S; $('mApply').disabled = false;
+  } catch (err) { st.innerHTML = `<span class="bad">✖ ${err.message || err}</span>`; } }
+$('mApply').onclick = () => { if (!pendingSched) return; store.set('schedule', pendingSched); location.reload(); };
+$('mReset').onclick = () => { store.del('schedule'); location.reload(); };
+$('mExport').onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({ source: SCHED.source, dates: SDATES }, null, 1)], { type: 'application/json' })); a.download = 'schedule.json'; a.click(); };
+
+/* ---- tabs ---- */
+let tab = QS.get('tab') || 'gantt';
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b)); renderTab(); });
+const GROUPS = []; { const m = new Map(); for (const e of ELS) { if (!m.has(e.grp)) { const g = { n: e.grp, a: Infinity, b: 0, as: false, els: [] }; m.set(e.grp, g); GROUPS.push(g); } const g = m.get(e.grp); g.a = Math.min(g.a, e.start); g.b = Math.max(g.b, e.temp ? (e.rmE || e.finish) : e.finish); g.els.push(e); if (/Assumed|สมมติ/.test(e.src)) g.as = true; } GROUPS.sort((x, y) => x.a - y.a); }
+function renderTab() {
+  const tb = $('tabbody');
+  if (tab === 'gantt') {
+    tb.innerHTML = `<div class="mut" style="margin-bottom:6px">${L2('แผนงาน 4D (คลิกแถวเพื่อไปวันเริ่มงาน)', '4D programme (click a row to jump to its start)')} · <span class="pill" style="background:var(--acc2);color:#111">${SCHED.source}</span> <span class="pill" style="background:#6c7a90;color:#111">${L2('สมมติฐาน', 'Assumed')}</span></div><div id="gwrap" style="position:relative"></div>` +
+      (PROJECT.cycle ? `<h3>${tx(PROJECT.cycle.t)}</h3><table class="cyc">${PROJECT.cycle.rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]} ${L2('วัน', r[1] > 1 ? 'days' : 'day')}</td><td class="mut">${r[2] || ''}</td></tr>`).join('')}</table>` : '');
+    $('gwrap').innerHTML = GROUPS.map((g, i) => `<div class="grow" data-i="${i}" title="${g.n}: ${fmtDate(g.a)} – ${fmtDate(g.b)}"><div class="gl">${g.n}</div><div class="gt"><div class="gb ${g.as ? 'as' : ''}" style="left:${t2v(g.a) / 10}%;width:${Math.max(.6, (t2v(g.b) - t2v(g.a)) / 10)}%"><div class="pg"></div></div></div></div>`).join('') + '<div id="gnow"></div>';
+    tb.querySelectorAll('.grow').forEach(r => r.onclick = () => { const g = GROUPS[+r.dataset.i]; setNow(g.a + DAY); focusOn(g.els); });
+  } else if (tab === 'ms') {
+    tb.innerHTML = STEPS.map((s, i) => `<div class="ms-step" data-i="${i}"><span class="d">${fmtDate(s.t0)} · ${s.dw}</span><b>${i + 1}. ${s.t}</b><ul>${s.b.map(x => `<li>${x}</li>`).join('')}</ul></div>`).join('') + tx(PROJECT.hse || '');
+    tb.querySelectorAll('.ms-step').forEach(r => r.onclick = () => setNow(STEPS[+r.dataset.i].t0 + (PROJECT.stepJump ?? 3) * DAY));
+  } else if (tab === 'model') {
+    const grps = {}; for (const k in CATS) (grps[CATS[k].grp] ||= []).push(k);
+    const lg = (PROJECT.labelGroups || []).concat([['struct', ['โครงสร้าง', 'Structure']]]);
+    tb.innerHTML = `<h3>${L2('ข้อความกำกับโมเดล', 'Model annotations')}</h3><div class="cat"><label><input type="checkbox" id="chkLblAll" ${LBL.all ? 'checked' : ''}> <b>${L2('แสดงข้อความกำกับ (ทั้งหมด)', 'Show annotations (all)')}</b></label><span class="mut">L</span></div>
+      <div style="display:flex;gap:6px;margin:4px 0 6px"><button id="lblOn">${L2('เลือกทั้งหมด', 'Select all')}</button><button id="lblNone">${L2('ไม่เลือกเลย', 'Select none')}</button></div>` +
+      lg.map(([g, gn]) => { const ls = LABELS.filter(l => l.grp === g); if (!ls.length) return ''; return `<div class="mut" style="font-size:11px;margin-top:4px">${tx(gn)}</div>` + ls.map(l => `<div class="cat" style="padding-left:10px"><i style="background:${l.col}"></i><label style="${LBL.all ? '' : 'opacity:.45'}"><input type="checkbox" data-lbl="${l.key}" ${LBL.off.includes(l.key) ? '' : 'checked'}> ${l.txt}</label><button data-fly="${l.key}" style="padding:1px 6px">◎</button></div>`).join(''); }).join('') +
+      Object.entries(grps).map(([g, ks]) => `<h3>${g}</h3>` + ks.map(k => `<div class="cat"><i style="background:${CATS[k].c}"></i><label><input type="checkbox" data-k="${k}" ${catHidden[k] ? '' : 'checked'}> ${CATS[k].th}</label><span class="mut">${ELS.filter(e => e.cat === k).length}</span></div>`).join('')).join('') +
+      `<h3>${L2('บริบท', 'Context')}</h3><div class="cat"><label><input type="checkbox" id="chkCity" ${city.visible ? 'checked' : ''}> ${L2('อาคาร/เมือง', 'City buildings')}</label></div><p class="mut" style="font-size:11.5px">${L2('คลิกชิ้นส่วนในโมเดลเพื่อดูคุณสมบัติ BIM', 'Click an element to see its BIM properties')}</p>`;
+    tb.querySelectorAll('input[data-k]').forEach(c => c.onchange = () => { catHidden[c.dataset.k] = !c.checked; refresh(); });
+    $('chkLblAll').onchange = e => setAllLabels(e.target.checked); $('chkCity').onchange = e => city.visible = e.target.checked;
+    tb.querySelectorAll('input[data-lbl]').forEach(c => c.onchange = () => { const k = c.dataset.lbl; LBL.off = LBL.off.filter(x => x !== k); if (!c.checked) LBL.off.push(k); else LBL.all = true; saveLBL(); applyLabels(); renderTab(); });
+    $('lblOn').onclick = () => { LBL.off = []; LBL.all = true; saveLBL(); applyLabels(); renderTab(); }; $('lblNone').onclick = () => { LBL.off = LABELS.map(l => l.key); saveLBL(); applyLabels(); renderTab(); };
+    tb.querySelectorAll('button[data-fly]').forEach(b => b.onclick = () => { const l = LABELS.find(x => x.key === b.dataset.fly), t = l.s.position.clone(); t.y = Math.max(t.y - 10, GY + 2); const r = 70; camAnim = { p0: camera.position.clone(), t0: controls.target.clone(), p1: t.clone().add(new THREE.Vector3(-r * .55, r * .5, r * .75)), t1: t, u: 0, dur: 1.4 }; });
+  } else tb.innerHTML = tx(PROJECT.info);
+  updateUI();
+}
+function focusOn(els) { const b = new THREE.Box3(); els.forEach(e => b.union(e.box)); const c = b.getCenter(new THREE.Vector3()), r = Math.max(25, b.getSize(new THREE.Vector3()).length() * .7); camAnim = { p0: camera.position.clone(), t0: controls.target.clone(), p1: c.clone().add(new THREE.Vector3(-r * .6, r * .55, r * .9)), t1: c, u: 0, dur: 1.4 }; }
+
+/* ---- KPIs + S-curve + activities ---- */
+const PERM = ELS.filter(e => !e.temp), SC = []; { const tot = PERM.reduce((a, e) => a + (e.finish - e.start), 0) || 1; for (let i = 0; i <= 120; i++) { const t = lerp(T0, T1, i / 120); SC.push(PERM.reduce((a, e) => a + clamp(t - e.start, 0, e.finish - e.start), 0) / tot); } }
+const progressAt = t => { const i = (t - T0) / (T1 - T0) * 120, a = Math.floor(clamp(i, 0, 119)); return lerp(SC[a], SC[a + 1], i - a); };
+const VOLCATS = PROJECT.structuralCats || [], totalVol = ELS.filter(e => e.qty?.vol && VOLCATS.includes(e.cat)).reduce((a, e) => a + e.qty.vol, 0);
+const KPIS = PROJECT.kpis || [
+  { t: ['ความก้าวหน้าตามแผน', 'Planned progress'], v: t => (progressAt(t) * 100).toFixed(1) + '%', bar: t => progressAt(t) },
+  { t: ['ชิ้นส่วนแล้วเสร็จ', 'Elements completed'], v: t => `${PERM.filter(e => t >= e.finish).length}/${PERM.length}` },
+  { t: ['คอนกรีตโครงสร้าง (m³)', 'Structural concrete (m³)'], v: t => `${Math.round(ELS.filter(e => e.qty?.vol && VOLCATS.includes(e.cat) && t >= (e.kind === 'cast' ? e.cast : e.finish)).reduce((a, e) => a + e.qty.vol, 0)).toLocaleString()} / ${Math.round(totalVol).toLocaleString()}` },
+  { t: ['งานชั่วคราวที่ใช้งาน', 'Temporary works active'], v: t => String(ELS.filter(e => e.temp && (e.st === 'wip' || e.st === 'done' || e.st === 'rm')).length) },
+];
+$('kpis').innerHTML = KPIS.map((k, i) => `<div class="kpi"><b id="kpi${i}">—</b><span>${tx(k.t)}</span>${k.bar ? `<div class="bar"><i id="kpib${i}" style="width:0"></i></div>` : ''}</div>`).join('');
+function drawSC() { const c = $('scurve'), g = c.getContext('2d'), w = c.width, h = c.height, css = getComputedStyle(document.body); g.clearRect(0, 0, w, h); g.strokeStyle = 'rgba(127,127,127,.3)'; g.lineWidth = 1; for (let i = 1; i < 4; i++) { g.beginPath(); g.moveTo(0, h * i / 4); g.lineTo(w, h * i / 4); g.stroke(); }
+  g.strokeStyle = css.getPropertyValue('--acc2'); g.lineWidth = 2; g.beginPath(); SC.forEach((v, i) => { const x = i / 120 * w, y = h - 4 - v * (h - 8); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+  const x = (NOW - T0) / (T1 - T0) * w, y = h - 4 - progressAt(NOW) * (h - 8); g.fillStyle = g.strokeStyle = css.getPropertyValue('--acc'); g.beginPath(); g.arc(x, y, 4, 0, 7); g.fill(); g.setLineDash([3, 3]); g.beginPath(); g.moveTo(x, 0); g.lineTo(x, h); g.stroke(); g.setLineDash([]); }
+function updateUI() {
+  $('dateBig').textContent = fmtDate(NOW); $('dateSmall').textContent = fmtISO(NOW) + ' ' + new Date(NOW).toTimeString().slice(0, 5);
+  let cur = STEPS[0]; for (const s of STEPS) if (s.t0 <= NOW) cur = s; $('stepName').textContent = cur ? cur.t : '';
+  KPIS.forEach((k, i) => { $('kpi' + i).textContent = k.v(NOW); if (k.bar) $('kpib' + i).style.width = clamp(k.bar(NOW), 0, 1) * 100 + '%'; });
+  const act = new Map(); for (const e of ELS) if (e.st === 'wip' || e.st === 'rm') { let t = e.name; if (e.kind === 'cast' && e.st === 'wip') t += ' — ' + (NOW < e.cast - DAY ? L2('ผูกเหล็ก/แบบหล่อ', 'rebar / formwork') : NOW < e.cast + DAY ? L2('เทคอนกรีต', 'concrete pour') : L2('บ่ม/ถอดแบบ', 'curing / striking')); if (e.st === 'rm') t += L2(' — กำลังรื้อถอน', ' — dismantling'); else if (e.temp) t += L2(' — กำลังติดตั้ง', ' — installing'); if (!act.has(e.grp)) act.set(e.grp, []); act.get(e.grp).push(t); }
+  $('act').innerHTML = act.size ? [...act].slice(0, 9).map(([g, l]) => `<li><b>${g}</b><small>${l.slice(0, 2).join('<br>')}${l.length > 2 ? `<br>+ ${l.length - 2} ${L2('รายการ', 'more')}` : ''}</small></li>`).join('') : `<li style="border-color:var(--ok)">${L2('ไม่มีกิจกรรมก่อสร้าง ณ วันนี้', 'No construction activity on this date')}</li>`;
+  drawSC(); const gn = $('gnow'); if (gn) { gn.style.left = `calc(156px + (100% - 156px) * ${t2v(NOW) / 1000})`; document.querySelectorAll('#gwrap .grow').forEach(r => { const g = GROUPS[+r.dataset.i]; r.querySelector('.pg').style.width = clamp((NOW - g.a) / (g.b - g.a), 0, 1) * 100 + '%'; }); }
+  document.querySelectorAll('.ms-step').forEach((r, i) => r.classList.toggle('cur', STEPS[i] === cur));
+}
+/* ---- picking → BIM properties ---- */
+const ray = new THREE.Raycaster(), ptr = new THREE.Vector2(); let downAt = null, selBox = null;
+canvas.addEventListener('pointerdown', e => downAt = [e.clientX, e.clientY]);
+canvas.addEventListener('pointerup', e => {
+  if (!downAt || fly.on || tour.on || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  ptr.set(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1); ray.setFromCamera(ptr, camera); const vis = o => { while (o) { if (!o.visible) return false; o = o.parent; } return true; };
+  const hit = ray.intersectObject(gStruct, true).find(h => h.object.isMesh && vis(h.object) && h.object.material !== M.ghost); if (selBox) { scene.remove(selBox); selBox = null; }
+  const p = $('props'); if (!hit) { p.style.display = 'none'; return; } let o = hit.object; while (o && !o.userData.el) o = o.parent; const el = o && o.userData.el; if (!el) return;
+  selBox = new THREE.Box3Helper(el.box, 0xffd43b); scene.add(selBox);
+  const st = { plan: ['plan', L2('ยังไม่เริ่ม', 'Not started')], wip: ['wip', L2('กำลังดำเนินการ', 'In progress')], done: ['done', L2('แล้วเสร็จ', 'Completed')], rm: ['wip', L2('กำลังรื้อถอน', 'Dismantling')], gone: ['plan', L2('รื้อถอนแล้ว', 'Removed')] }[el.st];
+  const rows = [['Element ID', el.id], [L2('ประเภท', 'Category'), CATS[el.cat]?.th], [L2('ชื่อ', 'Name'), el.name], [L2('สถานะ 4D', '4D status'), `<span class="pill ${st[0]}">${st[1]}</span>`], [L2('เริ่ม', 'Start'), fmtDate(el.start)], [L2('แล้วเสร็จ', 'Finish'), fmtDate(el.finish)]];
+  if (el.rmE) rows.push([L2('รื้อถอน', 'Removal'), fmtDate(el.rmS) + ' – ' + fmtDate(el.rmE)]); if (el.loc) rows.push([L2('ตำแหน่ง', 'Location'), el.loc]);
+  if (el.qty?.H) rows.push([L2('ความลึก H', 'Depth H'), el.qty.H.toFixed(2) + ' m']); if (el.qty?.L) rows.push([L2('ความยาว', 'Length'), el.qty.L.toFixed(2) + ' m']); if (el.qty?.vol) rows.push([L2('ปริมาตรคอนกรีต', 'Concrete volume'), el.qty.vol.toFixed(1) + ' m³']);
+  rows.push([L2('แบบอ้างอิง', 'Drawing ref.'), el.dwg || '—'], [L2('ที่มาของวันที่', 'Date source'), el.src]);
+  p.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><b class="acc">${L2('คุณสมบัติ BIM', 'BIM properties')}</b><button onclick="this.closest('#props').style.display='none'">✕</button></div><table>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>`; p.style.display = 'block';
+});
+
+/* =====================================================================================
+   LOOP + URL STATE  (?date=YYYY-MM-DD&theme=day|sunset|night|bim|blue&view=…&lang=th|en&ui=0&panels=0&labels=0&lbloff=a,b&tab=…&tour=0..1)
+   ===================================================================================== */
+function updateUrl() { if (!history.replaceState) return; const u = new URL(location.href); u.searchParams.set('theme', theme); u.searchParams.set('date', fmtISO(NOW)); history.replaceState(null, '', u); }
+const clock = new THREE.Clock(); let frames = 0;
+function loop() {
+  requestAnimationFrame(loop); const dt = Math.min(clock.getDelta(), .1);
+  if (playing) { setNow(NOW + dt * (+$('speed').value) * DAY); if (NOW >= T1) togglePlay(); }
+  if (water) water.material.uniforms.time.value += dt * .6;
+  updateCars(dt); updateCranes(dt); updateProject(api, NOW, dt);
+  if (isNight) M.avi.emissiveIntensity = (performance.now() % 1500) < 700 ? 6 : .3;
+  if (camAnim) { camAnim.u = Math.min(1, camAnim.u + dt / camAnim.dur); const k = camAnim.u < .5 ? 2 * camAnim.u ** 2 : 1 - (-2 * camAnim.u + 2) ** 2 / 2; camera.position.lerpVectors(camAnim.p0, camAnim.p1, k); controls.target.lerpVectors(camAnim.t0, camAnim.t1, k); if (camAnim.u >= 1) camAnim = null; }
+  let spd = 0;
+  if (tour.on) { tour.u += dt / tour.dur; if (tour.u >= 1) stopTour(); else { const p = tour.posC.getPoint(tour.u), tg = tour.tgtC.getPoint(Math.min(1, tour.u + .004)); spd = p.distanceTo(tour.last) / Math.max(dt, 1e-3); tour.last.copy(p); camera.position.copy(p); camera.lookAt(tg); tour.bat = Math.max(12, 100 - tour.u * 70);
+      const idx = Math.round(tour.u * (TOUR.length - 1)); if (idx !== tour.idx) { tour.idx = idx; capEl.innerHTML = `${TOUR[idx][2]}<small>${TOUR[idx][3]}</small>`; capEl.style.display = 'block'; } hudUpdate(spd); } }
+  else if (fly.on) { const f = new THREE.Vector3(-Math.sin(fly.yaw) * Math.cos(fly.pitch), Math.sin(fly.pitch), -Math.cos(fly.yaw) * Math.cos(fly.pitch)), r = new THREE.Vector3(Math.cos(fly.yaw), 0, -Math.sin(fly.yaw)), k = fly.keys, v = (k.ShiftLeft || k.ShiftRight ? 60 : 18) * dt, mv = new THREE.Vector3();
+    if (k.KeyW || k.ArrowUp) mv.add(f); if (k.KeyS || k.ArrowDown) mv.sub(f); if (k.KeyD || k.ArrowRight) mv.add(r); if (k.KeyA || k.ArrowLeft) mv.sub(r); if (k.KeyR || k.KeyE) mv.y += 1; if (k.KeyF || k.KeyQ) mv.y -= 1;
+    if (mv.lengthSq()) mv.normalize().multiplyScalar(v); camera.position.add(mv); camera.position.y = Math.max((CX.water ? CX.water.y : GY) + 1.5, camera.position.y); spd = mv.length() / Math.max(dt, 1e-3); camera.lookAt(camera.position.clone().add(f)); tour.bat = Math.max(5, tour.bat - dt * .08); hudUpdate(spd); }
+  else controls.update();
+  const active = ELS.filter(e => e.st === 'wip' || e.st === 'rm'); let dist = 1e9; for (const e of active) dist = Math.min(dist, camera.position.distanceTo(e.center));
+  snd.update(dt, { dist, alt: camera.position.y - GY, real: MODE === 'real', water: !!CX.water, night: isNight, active: active.length > 0, casting: active.some(e => e.kind === 'cast' && NOW >= e.cast - DAY && NOW < e.cast + DAY), drone: tour.on || fly.on, speed: spd, opened: NOW >= OPEN });
+  composer.render();
+  if (++frames === 3) { $('loading').style.opacity = 0; setTimeout(() => $('loading').remove(), 700); }
+  if (frames === 30) document.title = PROJECT.short || '4D BIM'; if (frames === 45) window.__READY = true;
+}
+addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); });
+slider.value = t2v(NOW);
+applyTheme(QS.get('theme') || 'day');
+const v0 = QS.get('view'), vk = v0 && VIEWS[v0] ? v0 : Object.keys(VIEWS)[0]; camera.position.set(...VIEWS[vk][0]); controls.target.set(...VIEWS[vk][1]); $('view').value = vk;
+if (QS.get('ui') === '0') document.body.classList.add('noui');
+applyLabels();
+if (QS.get('tour')) { const u = +QS.get('tour'), p = tour.posC.getPoint(u), tg = tour.tgtC.getPoint(Math.min(1, u + .004)); controls.enabled = false; camera.position.copy(p); camera.lookAt(tg); controls.target.copy(tg); hud.style.display = 'block'; capEl.style.display = 'block'; const i = Math.round(u * (TOUR.length - 1)); capEl.innerHTML = `${TOUR[i][2]}<small>${TOUR[i][3]}</small>`; hudUpdate(12); }
+document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x.dataset.tab === tab));
+renderTab(); refresh(); loop();
+window.__app = { setNow, applyTheme, goView, ELS, startTour, api };
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(() => { });
+</script>
+</body>
+</html>
